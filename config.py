@@ -39,7 +39,7 @@ PREFIX = "[Discord] "
 BOT_NAME = "Discord Message Bridge"
 
 # QQ 机器人命令名
-QQ_COMMAND = ".dmb"
+QQ_COMMAND = "dmb"
 
 # QQ 机器人命令前缀
 QQ_COMMAND_PREFIX = "."
