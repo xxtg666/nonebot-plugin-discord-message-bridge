@@ -12,8 +12,6 @@
     <img src="https://img.shields.io/badge/code%20style-black-000000.svg?style=for-the-badge" alt="Code style: black">
 </a>
 
-✨ Discord ⇄ QQ 消息转发 Bot ✨
-
 </div>
 
 ## 📖 介绍
