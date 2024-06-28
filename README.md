@@ -66,19 +66,21 @@ git submodule update --init --recursive
 
 
 <details>
-<summary>使用 nb-cli 安装</summary>
+<summary>使用 pip 安装</summary>
 
-在 nonebot2 项目的根目录下打开命令行, 输入以下指令即可安装
+1. 在 nonebot2 项目的根目录下打开命令行, 输入以下指令
 
 ```bash
-nb plugin install nonebot-plugin-discord-message-bridge
+pip install nonebot-plugin-discord-message-bridge
 ```
+
+2. 修改 `pyproject.toml` 在 `plugins` 中添加 `nonebot_plugin_discord_message_bridge`
 
 </details>
 
 ### 3. 安装依赖
 
-> 若使用 nb-cli 安装，可忽略此步骤
+> 若使用 pip 安装，可忽略此步骤
 
 经过步骤二后，您的插件应该被安装到了 `插件目录/nonebot_plugin_discord_message_bridge` 中，本步骤您需要进入 `插件目录/nonebot_plugin_discord_message_bridge` 安装本插件所需依赖
 
