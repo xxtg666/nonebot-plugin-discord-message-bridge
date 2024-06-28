@@ -73,7 +73,7 @@ pip install -r requirements.txt
 
 ## ⚙️ 配置
 
-请修改 -> [🔗config.py](https://github.com/xxtg666/nonebot-plugin-discord-message-bridge/blob/main/config.py)
+请修改在机器人目录中创建一个 `.env` 文件（或编辑对应 `.env` 文件，可能为 `.env.dev` 或 `.env.prod`），并参考 [config.py](https://github.com/xxtg666/nonebot-plugin-discord-message-bridge/blob/main/config.py) 的内容进行修改
 
 - 需要 [🔗创建一个 Discord Bot](https://discord.com/developers/applications) 并邀请进入服务器中，用于接收消息
 - 需要在 Discord 的 「服务器设置 → 整合」 内为需要转发的频道创建一个 Webhook ，并填入配置文件中，用于发送 QQ 内的消息
