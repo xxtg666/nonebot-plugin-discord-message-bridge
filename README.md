@@ -40,7 +40,6 @@ plugin_dirs = ["src/plugins"]
 <details>
 <summary>使用 Git 子模块安装</summary>
 
-> [!TIP]
 > 此方法需要您能够使用 git 并已经在机器人目录下初始化 git 仓库
 
 请将以下指令的 `src/plugins/` 替换为您的插件目录

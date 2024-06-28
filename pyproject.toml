@@ -1,0 +1,19 @@
+[project]
+name = "nonebot-plugin-discord-message-bridge"
+
+version = "1.0.0"
+
+description = "Discord - QQ 消息转发插件"
+authors = [
+    { name = "xxtg666", email = "xxtg666@gmail.com" }
+]
+dependencies = [
+    "nonebot2",
+    "nonebot-adapter-onebot",
+    "discord-py",
+    "nonebot2[fastapi]",
+    "httpx"
+]
+requires-python = ">=3.10"
+readme = "README.md"
+license = { text = "MIT" }
