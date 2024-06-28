@@ -1,0 +1,5 @@
+nonebot2
+nonebot-adapter-onebot
+discord-py
+nonebot2[fastapi]
+httpx
