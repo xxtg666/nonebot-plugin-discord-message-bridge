@@ -24,71 +24,43 @@
 
 ## 💿 安装
 
-### 1. 创建一个新的 NoneBot2 机器人
+### 先决条件
 
-> 如果您需要将本插件安装到现有的机器人，可忽略此步骤
+在安装之前，请确保您的环境符合以下条件：
 
-注意在 `pyproject.toml` 中配置一个 `plugin_dirs`，可以参考以下设置：
+1. 拥有一个能够运行的 Python，版本在 3.9 及以上（本插件部分版本可能需要 3.12）
+2. 已经安装并配置好 pip 等任意一款 Python3 包管理器
+3. 已经创建或拥有了一个 NoneBot2 机器人项目
 
+### 安装
+
+<details>
+<summary>通过文件安装</summary>
+
+1. 在您的 pyproject.toml 中配置一个插件目录
 ```toml
 plugin_dirs = ["src/plugins"]
 ```
-
-> [!TIP]
-> 在配置完成后您需要在机器人工作目录新建此文件夹，下文将使用 `插件目录` 代指此目录。
-
-### 2. 安装插件
-
-您可以选择以下三种安装方式
-
-<details>
-<summary>使用 Git 子模块安装</summary>
-
-> 此方法需要您能够使用 git 并已经在机器人目录下初始化 git 仓库
-
-请将以下指令的 `src/plugins/` 替换为您的插件目录
-
+> 您需要确保此目录存在，下文将使用 `插件目录` 代指此目录。
+2. [下载本仓库](https://github.com/xxtg666/nonebot-plugin-discord-message-bridge/archive/refs/heads/main.zip)
+3. 将 `nonebot-plugin-discord-message-bridge-main` 文件夹中的 `nonebot_plugin_discord_message_bridge` 文件夹解压到插件目录
+4. 安装依赖
 ```bash
-git submodule add https://github.com/xxtg666/nonebot-plugin-discord-message-bridge src/plugins/nonebot_plugin_discord_message_bridge
-git submodule update --init --recursive
+pip install -r discord-py httpx nonebot2 'nonebot2[fastapi]' nonebot-adapter-onebot
 ```
 
 </details>
 
-
 <details>
-<summary>使用文件</summary>
-
-1. [下载本仓库](https://github.com/xxtg666/nonebot-plugin-discord-message-bridge/archive/refs/heads/main.zip)
-2. 将 `nonebot-plugin-discord-message-bridge-main` 文件夹解压到插件目录，并重命名为 `nonebot_plugin_discord_message_bridge`
-
-</details>
-
-
-<details>
-<summary>使用 pip 安装</summary>
-
-1. 在 nonebot2 项目的根目录下打开命令行, 输入以下指令
-
+<summary>通过 PIP 安装</summary>
+    
+1. 使用 pip 安装插件
 ```bash
 pip install nonebot-plugin-discord-message-bridge
 ```
-
 2. 修改 `pyproject.toml` 在 `plugins` 中添加 `nonebot_plugin_discord_message_bridge`
 
 </details>
-
-### 3. 安装依赖
-
-> 若使用 pip 安装，可忽略此步骤
-
-经过步骤二后，您的插件应该被安装到了 `插件目录/nonebot_plugin_discord_message_bridge` 中，本步骤您需要进入 `插件目录/nonebot_plugin_discord_message_bridge` 安装本插件所需依赖
-
-```bash
-pip install -r requirements.txt
-```
-
-如果您使用了其他包管理器，请参考您所使用的包管理器的使用方法安装所需依赖
 
 ## ⚙️ 配置
 
