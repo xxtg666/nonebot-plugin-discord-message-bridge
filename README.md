@@ -10,7 +10,7 @@
     <img src="https://img.shields.io/pypi/v/nonebot-plugin-discord-message-bridge.svg?style=for-the-badge" alt="pypi">
 </a>
 
-<img src="https://img.shields.io/badge/python-3.10+-blue.svg?style=for-the-badge" alt="python">
+<img src="https://img.shields.io/badge/python-3.9+-blue.svg?style=for-the-badge" alt="python">
 
 <a href="https://github.com/psf/black">
     <img src="https://img.shields.io/badge/code%20style-black-000000.svg?style=for-the-badge" alt="Code style: black">
@@ -64,7 +64,7 @@ pip install nonebot-plugin-discord-message-bridge
 
 ## ⚙️ 配置
 
-请修改在机器人目录中创建一个 `.env` 文件（或编辑对应 `.env` 文件，可能为 `.env.dev` 或 `.env.prod`），并参考 [config.py](https://github.com/xxtg666/nonebot-plugin-discord-message-bridge/blob/main/config.py) 的内容进行修改
+请修改在机器人目录中创建一个 `.env` 文件（或编辑对应 `.env` 文件，可能为 `.env.dev` 或 `.env.prod`），并参考 [🔗config.py]([https://github.com/xxtg666/nonebot-plugin-discord-message-bridge/blob/main/config.py](https://github.com/xxtg666/nonebot-plugin-discord-message-bridge/blob/main/src/nonebot_plugin_discord_message_bridge/config.py)) 的内容进行修改
 
 - 需要 [🔗创建一个 Discord Bot](https://discord.com/developers/applications) 并邀请进入服务器中，用于接收消息
 - 需要在 Discord 的 「服务器设置 → 整合」 内为需要转发的频道创建一个 Webhook ，并填入配置文件中，用于发送 QQ 内的消息
