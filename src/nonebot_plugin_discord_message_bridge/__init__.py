@@ -16,9 +16,9 @@ import time
 import os
 
 from .config import *
-import utils.local as uLocal
-import utils.send as uSend
-import utils.download as uDownload
+from .utils import local as uLocal
+from .utils import send as uSend
+from .utils import download as uDownload
 
 os.environ["HTTP_PROXY"] = HTTP_PROXY
 os.environ["HTTPS_PROXY"] = HTTP_PROXY
