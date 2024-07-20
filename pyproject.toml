@@ -1,7 +1,7 @@
 [project]
 name = "nonebot-plugin-discord-message-bridge"
 
-version = "1.0.3"
+version = "1.0.4"
 
 description = "Discord - QQ 消息转发插件"
 authors = [
