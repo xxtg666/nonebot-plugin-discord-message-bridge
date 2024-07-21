@@ -1,7 +1,7 @@
+from nonebot import logger
 import httpx
 
 from ..config import *
-# from .. import log
 
 
 async def webhook_send_message(username, avatar_url, content, images=[]):
@@ -21,7 +21,7 @@ async def webhook_send_message(username, avatar_url, content, images=[]):
                 for idx, img_url in enumerate(images)
             ],
         )
-        # log("server response: " + str(resp.json()))
+        logger.debug("server response: " + str(resp.json()))
         return resp.json()["id"]
 
 

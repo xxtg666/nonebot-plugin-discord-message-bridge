@@ -1,4 +1,5 @@
 import nonebot
+from nonebot import logger
 from nonebot.matcher import Matcher
 from nonebot.adapters.onebot.v11 import Bot, GroupMessageEvent, MessageSegment
 from nonebot.adapters.onebot.v11.message import Message
@@ -29,23 +30,13 @@ intents.message_content = True
 bot_restart_time = 0
 dcclient = discord.Client(intents=intents, proxy=HTTP_PROXY)
 if not os.path.exists(qq_bind_file):
-    json.dump({}, open(qq_bind_file, "w"))
+    json.dump({}, uLocal.safe_open(qq_bind_file, "w"))
 if not os.path.exists(qq_bind_file_2):
-    json.dump({}, open(qq_bind_file_2, "w"))
+    json.dump({}, uLocal.safe_open(qq_bind_file_2, "w"))
 temp_bind_qq = {}  # qq:rid
 temp_bind_dis = {}  # rid:dis
 temp_message_ids = []  # (qq:dc)
-ENABLE_LOG = False
 qq_commad_name = QQ_COMMAND_PREFIX + QQ_COMMAND
-
-
-def log(msg, level="INFO"):
-    if ENABLE_LOG:
-        with open(LOG_FILE, "a") as f:
-            f.write(
-                f"[{time.strftime('%Y-%m-%d %H:%M:%S',time.localtime())}] [{level}] {msg}\n"
-            )
-
 
 def get_otherside_message_id(_id, this):
     if this == "qq":
@@ -163,7 +154,7 @@ def startDiscordBot():
                 WEBHOOK_ID
             ):
                 return
-            log(
+            logger.debug(
                 f"Received message from Discord: Message={message.content} UserID={message.author.id} ChannelID={message.channel.id} MessageID={message.id}"
                 f" ReplyMessageID={message.reference.message_id if message.reference else None}"
             )
@@ -236,15 +227,15 @@ def startDiscordBot():
 
         @dctree.command(name="debug-dmb", description="Get temp_message_ids")
         async def debug_dmb(interaction):
-            log("Value of temp_message_ids: " + str(temp_message_ids))
-            await interaction.response.send_message(f"Successfully write to log file")
+            logger.info("Value of temp_message_ids: " + str(temp_message_ids))
+            await interaction.response.send_message(f"Success")
 
         @dcclient.event
         async def on_ready():
             global discord_bot_started
             await dctree.sync(guild=discord.Object(id=GUILD_ID))
             discord_bot_started = True
-            log("Discord Bot started")
+            logger.success("Discord Bot started")
 
         dcclient.run(TOKEN)
     except:
@@ -275,7 +266,7 @@ async def _(matcher: Matcher, bot: Bot, event: GroupMessageEvent):
             return
     except:
         return
-    log(
+    logger.debug(
         f"Received message from QQ: Message={str(event.get_message())} UserID={event.get_user_id()} GroupID={event.group_id} MessageID={event.message_id} "
         f"ReplyMessageID={event.reply.message_id if event.reply else None} SenderNickname={event.sender.nickname}"
     )
@@ -339,7 +330,7 @@ async def _(matcher: Matcher, bot: Bot):
         gbot = bot
         already_start_discord_bot = True
         threading.Thread(target=startDiscordBot).start()
-        log("Discord Bot thread started")
+        logger.success("Discord Bot thread started")
         matcher.destroy()
 
 
@@ -383,13 +374,9 @@ async def _(
             await matcher.finish("正在尝试重启转发 Bot", at_sender=True)
         else:
             await matcher.finish("转发 Bot 正常运行中", at_sender=True)
-    elif args[0] == "log":
-        global ENABLE_LOG
-        ENABLE_LOG = not ENABLE_LOG
-        await matcher.finish(f"日志记录状态: {ENABLE_LOG}", at_sender=True)
     elif args[0] == "debug":
-        log("Value of temp_message_ids: " + str(temp_message_ids))
-        await matcher.finish("Successfully write to log file", at_sender=True)
+        logger.info("Value of temp_message_ids: " + str(temp_message_ids))
+        await matcher.finish("Success", at_sender=True)
     await matcher.finish(
         BOT_NAME
         + " 命令帮助\n"
@@ -397,8 +384,6 @@ async def _(
         + " bind <token> - 绑定 Discord 账户\n"
         + qq_commad_name
         + " restart - 手动重启转发 Bot (仅在自动重启失败后可用)\n"
-        + qq_commad_name
-        + " log - 开启/关闭日志记录\n"
         + qq_commad_name
         + " debug - 在日志中获取 temp_message_ids",
         at_sender=True,

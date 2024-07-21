@@ -2,6 +2,7 @@ import random
 import json
 import html
 import re
+import os
 
 from ..config import *
 
@@ -67,3 +68,10 @@ def replace_ids_with_cq_at(msg):
 
     replaced_msg = re.sub(pattern, replace_id, msg)
     return replaced_msg
+
+
+def safe_open(file_path, mode):
+    directory = os.path.dirname(file_path)
+    if not os.path.exists(directory):
+        os.makedirs(directory)
+    return open(file_path, mode)

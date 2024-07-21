@@ -9,7 +9,6 @@ class Config(BaseModel):
     dmb_guild_id: int
     dmb_channel_id: int
     dmb_qq_id: int
-    dmb_log_file: str = "data/dmb_log.txt"
     dmb_qq_bind_file: str = "data/discord_message_bridge_qq_bind.json"
     dmb_qq_bind_file_2: str = "data/discord_message_bridge_qq_bind_2.json"
     dmb_qq_forward_failed: str = "cry"
@@ -48,9 +47,6 @@ QQ_ID = config.dmb_qq_id
 
 # 转发失败时添加的 reaction 名称 (支持自定义表情符号)
 QQ_FORWARD_FAILED = config.dmb_qq_forward_failed
-
-# 日志文件路径
-LOG_FILE = config.dmb_log_file
 
 # QQ - Discord 用户 id 绑定文件路径
 qq_bind_file = config.dmb_qq_bind_file
