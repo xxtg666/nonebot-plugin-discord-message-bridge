@@ -155,11 +155,11 @@ async def _(
         logger.info("Value of message_id_records: " + str(gv.message_id_records))
         await matcher.finish("Success", at_sender=True)
     await matcher.finish(
-        BOT_NAME
+        fwd.BOT_NAME
         + " 命令帮助\n"
-        + gv.qq_command_name
+        + fwd.QQ_COMMAND_NAME
         + " bind <token> - 绑定 Discord 账户\n"
-        + gv.qq_command_name
+        + fwd.QQ_COMMAND_NAME
         + " debug - 在日志中获取 message_id_records",
         at_sender=True,
     )

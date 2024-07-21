@@ -119,6 +119,7 @@ class ForwardConfig:
         self.QQ_SUDO_FORMAT = self.forward.get("qq-sudo-format", QQ_SUDO_FORMAT)
         self.QQ_COMMAND_PREFIX = self.forward.get("qq-command-prefix", QQ_COMMAND_PREFIX)
         self.QQ_COMMAND = self.forward.get("qq-command", QQ_COMMAND)
+        self.QQ_COMMAND_NAME = self.QQ_COMMAND_PREFIX + self.QQ_COMMAND
         self.BOT_NAME = self.forward.get("bot-name", BOT_NAME)
         self.PREFIX = self.forward.get("prefix", PREFIX)
         self.IMAGE_PLACEHOLDER = self.forward.get("image-placeholder", IMAGE_PLACEHOLDER)

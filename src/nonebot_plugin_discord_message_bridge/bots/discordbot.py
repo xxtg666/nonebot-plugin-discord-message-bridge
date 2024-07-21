@@ -27,11 +27,11 @@ def process_bind_command(discord_id, command, fwd):
                 if gv.temp_bind_discord[gv.temp_bind_qq[qq_id]] == discord_id:
                     return [
                         (
-                            f"<@{discord_id}> 你已在请求绑定QQ号,请在QQ群({fwd.QQ_GROUP_ID})内发送 `{gv.qq_command_name} bind {gv.temp_bind_qq[qq_id]}` 进行绑定",
+                            f"<@{discord_id}> 你已在请求绑定QQ号,请在QQ群({fwd.QQ_GROUP_ID})内发送 `{fwd.QQ_COMMAND_NAME} bind {gv.temp_bind_qq[qq_id]}` 进行绑定",
                             False,
                         ),
                         (
-                            f"[CQ:at,qq={qq_id}] 请发送「{gv.qq_command_name} bind {gv.temp_bind_qq[qq_id]}」绑定 Discord({discord_id}) 如果这不是你的操作, 请忽略本条消息",
+                            f"[CQ:at,qq={qq_id}] 请发送「{fwd.QQ_COMMAND_NAME} bind {gv.temp_bind_qq[qq_id]}」绑定 Discord({discord_id}) 如果这不是你的操作, 请忽略本条消息",
                             True,
                         ),
                     ]
@@ -43,11 +43,11 @@ def process_bind_command(discord_id, command, fwd):
             gv.temp_bind_discord[rid] = discord_id
             return [
                 (
-                    f"<@{discord_id}> 请在QQ群({fwd.QQ_GROUP_ID})内发送 `{gv.qq_command_name} bind {rid}` 进行绑定",
+                    f"<@{discord_id}> 请在QQ群({fwd.QQ_GROUP_ID})内发送 `{fwd.QQ_COMMAND_NAME} bind {rid}` 进行绑定",
                     False,
                 ),
                 (
-                    f"[CQ:at,qq={qq_id}] 请发送「{gv.qq_command_name} bind {rid}」绑定 Discord({discord_id}) 如果这不是你的操作, 请忽略本条消息",
+                    f"[CQ:at,qq={qq_id}] 请发送「{fwd.QQ_COMMAND_NAME} bind {rid}」绑定 Discord({discord_id}) 如果这不是你的操作, 请忽略本条消息",
                     True,
                 ),
             ]
