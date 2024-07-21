@@ -34,7 +34,8 @@ if not os.path.exists(qq_bind_file):
 temp_bind_qq = {}  # qq:rid
 temp_bind_dis = {}  # rid:dis
 temp_message_ids = []  # (qq:dc)
-qq_commad_name = QQ_COMMAND_PREFIX + QQ_COMMAND
+qq_command_name = QQ_COMMAND_PREFIX + QQ_COMMAND
+
 
 def get_otherside_message_id(_id, this):
     if this == "qq":
@@ -79,11 +80,11 @@ def process_xdbot_command(discord_id, command):
                 if temp_bind_dis[temp_bind_qq[qq_id]] == discord_id:
                     return [
                         (
-                            f"<@{discord_id}> 你已在请求绑定QQ号,请在QQ群内发送 `{qq_commad_name} bind {temp_bind_qq[qq_id]}` 进行绑定",
+                            f"<@{discord_id}> 你已在请求绑定QQ号,请在QQ群内发送 `{qq_command_name} bind {temp_bind_qq[qq_id]}` 进行绑定",
                             False,
                         ),
                         (
-                            f"[CQ:at,qq={qq_id}] 请发送「{qq_commad_name} bind {temp_bind_qq[qq_id]}」绑定 Discord({discord_id}) 如果这不是你的操作, 请忽略本条消息",
+                            f"[CQ:at,qq={qq_id}] 请发送「{qq_command_name} bind {temp_bind_qq[qq_id]}」绑定 Discord({discord_id}) 如果这不是你的操作, 请忽略本条消息",
                             True,
                         ),
                     ]
@@ -94,9 +95,9 @@ def process_xdbot_command(discord_id, command):
             temp_bind_qq[qq_id] = rid
             temp_bind_dis[rid] = discord_id
             return [
-                (f"<@{discord_id}> 请在QQ群内发送 `{qq_commad_name} bind {rid}` 进行绑定", False),
+                (f"<@{discord_id}> 请在QQ群内发送 `{qq_command_name} bind {rid}` 进行绑定", False),
                 (
-                    f"[CQ:at,qq={qq_id}] 请发送「{qq_commad_name} bind {rid}」绑定 Discord({discord_id}) 如果这不是你的操作, 请忽略本条消息",
+                    f"[CQ:at,qq={qq_id}] 请发送「{qq_command_name} bind {rid}」绑定 Discord({discord_id}) 如果这不是你的操作, 请忽略本条消息",
                     True,
                 ),
             ]
@@ -375,11 +376,11 @@ async def _(
     await matcher.finish(
         BOT_NAME
         + " 命令帮助\n"
-        + qq_commad_name
+        + qq_command_name
         + " bind <token> - 绑定 Discord 账户\n"
-        + qq_commad_name
+        + qq_command_name
         + " restart - 手动重启转发 Bot (仅在自动重启失败后可用)\n"
-        + qq_commad_name
+        + qq_command_name
         + " debug - 在日志中获取 temp_message_ids",
         at_sender=True,
     )
