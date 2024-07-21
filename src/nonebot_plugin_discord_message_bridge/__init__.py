@@ -57,7 +57,7 @@ async def _(matcher: Matcher, bot: Bot, event: GroupMessageEvent):
                     if dis_id := uLocal.get_qq_bind_discord(event.get_user_id()):
                         await matcher.finish(f"你已绑定 Discord({dis_id})", at_sender=True)
                     await matcher.finish(
-                        f"你还未绑定 Discord, 请到消息转发频道下发送「{DISCORD_COMMAND_PREFIX}bind <uid>」进行绑定",
+                        f"你还未绑定 Discord, 请到消息转发频道下发送「{fwd.DISCORD_COMMAND_PREFIX}bind <uid>」进行绑定",
                         at_sender=True,
                     )
                 if (
