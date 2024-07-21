@@ -16,7 +16,7 @@ def get_qq_bind(discord_id):
 
 
 def get_qq_bind_discord(qq_id):
-    return json.load(open(qq_bind_file_2, "r")).get(str(qq_id), False)
+    return {qq: dis for dis, qq in json.load(open(qq_bind_file, "r")).items()}.get(str(qq_id), False)
 
 
 def genRandomID(k: int = 8) -> str:
@@ -45,7 +45,7 @@ def get_cq_images(string):
 
 def replace_cq_at_with_ids(msg):
     pattern = r"\[CQ:at,qq=(\d+)\]"
-    ids = json.load(open(qq_bind_file_2, "r"))
+    ids = {qq: dis for dis, qq in json.load(open(qq_bind_file, "r")).items()}
 
     def replace_id(match):
         id_str = match.group(1)

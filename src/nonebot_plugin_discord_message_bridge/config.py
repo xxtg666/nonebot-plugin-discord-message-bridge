@@ -10,7 +10,6 @@ class Config(BaseModel):
     dmb_channel_id: int
     dmb_qq_id: int
     dmb_qq_bind_file: str = "data/discord_message_bridge_qq_bind.json"
-    dmb_qq_bind_file_2: str = "data/discord_message_bridge_qq_bind_2.json"
     dmb_qq_forward_failed: str = "cry"
     dmb_max_reply_preview_length: int = 100
     dmb_http_proxy: str = "http://127.0.0.1:7890"
@@ -50,7 +49,6 @@ QQ_FORWARD_FAILED = config.dmb_qq_forward_failed
 
 # QQ - Discord 用户 id 绑定文件路径
 qq_bind_file = config.dmb_qq_bind_file
-qq_bind_file_2 = config.dmb_qq_bind_file_2
 
 # 转发回复消息时显示的原消息内容的最大长度
 MAX_REPLY_PREVIEW_LENGTH = config.dmb_max_reply_preview_length

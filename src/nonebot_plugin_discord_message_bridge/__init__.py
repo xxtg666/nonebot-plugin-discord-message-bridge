@@ -31,8 +31,6 @@ bot_restart_time = 0
 dcclient = discord.Client(intents=intents, proxy=HTTP_PROXY)
 if not os.path.exists(qq_bind_file):
     json.dump({}, uLocal.safe_open(qq_bind_file, "w"))
-if not os.path.exists(qq_bind_file_2):
-    json.dump({}, uLocal.safe_open(qq_bind_file_2, "w"))
 temp_bind_qq = {}  # qq:rid
 temp_bind_dis = {}  # rid:dis
 temp_message_ids = []  # (qq:dc)
@@ -59,10 +57,7 @@ def add_temp_message_id(qq_id, dc_id):
 def set_qq_bind(discord_id, qq_id):
     qq_bind = json.load(open(qq_bind_file, "r"))
     qq_bind[str(discord_id)] = str(qq_id)
-    qq_bind_2 = json.load(open(qq_bind_file_2, "r"))
-    qq_bind_2[str(qq_id)] = str(discord_id)
     json.dump(qq_bind, open(qq_bind_file, "w"))
-    json.dump(qq_bind_2, open(qq_bind_file_2, "w"))
 
 
 async def send_list_message(content_list):
