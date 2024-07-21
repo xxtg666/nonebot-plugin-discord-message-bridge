@@ -7,7 +7,7 @@ class Config(BaseModel):
     dmb_qq_bind_file: str = "data/discord_message_bridge_qq_bind.json"
     dmb_forwards_config_file: str = "data/discord_message_bridge_forwards.yaml"
     dmb_max_message_id_record: int = 3000
-    dmb_forward_failed_reaction: str = "cry"
+    dmb_forward_failed_reaction: str = "😢"
     dmb_max_reply_preview_length: int = 100
     dmb_prefix: str = "[Discord] "
     dmb_image_placeholder: str = " [图片] "

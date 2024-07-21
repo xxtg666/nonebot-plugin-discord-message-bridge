@@ -101,7 +101,7 @@ def record_message_id(qq_id, dc_id):
 class ForwardConfig:
     def __init__(self, forward_id):
         self.forward = None
-        for forward in gv.forward_config:
+        for forward in gv.forward_config["forwards"]:
             if (forward["channel-id"] == forward_id) or (forward["qq-group-id"] == forward_id):
                 self.forward: dict = forward
                 break

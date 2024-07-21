@@ -57,6 +57,6 @@ async def send_message(content, fwd):
 async def send_list_message(content_list, fwd):
     for i in content_list:
         if not i[1]:
-            await send_message(i[0], fwd.CHANNEL_ID)
+            await send_message(i[0], fwd)
         else:
             await gv.qq_bot.send_group_msg(group_id=fwd.QQ_GROUP_ID, message=i[0])

@@ -38,7 +38,7 @@ def process_bind_command(discord_id, command, fwd):
                 else:
                     del gv.temp_bind_qq[qq_id]
                     del gv.temp_bind_discord[gv.temp_bind_qq[qq_id]]
-            rid = uLocal.genRandomID(16)
+            rid = uLocal.genRandomID(8)
             gv.temp_bind_qq[qq_id] = rid
             gv.temp_bind_discord[rid] = discord_id
             return [
@@ -122,7 +122,7 @@ def startDiscordBot(bot_token, bot_id, notice_qq_groups):
                     uLocal.record_message_id(msg_id, message.id)
             except:
                 await message.add_reaction(
-                    discord.utils.get(message.guild.emojis, name=fwd.QQ_FORWARD_FAILED)
+                    fwd.QQ_FORWARD_FAILED
                 )
                 await message.reply("```" + traceback.format_exc() + "```")
 
