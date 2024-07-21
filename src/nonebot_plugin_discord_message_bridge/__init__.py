@@ -47,6 +47,44 @@ async def _(matcher: Matcher, bot: Bot, event: GroupMessageEvent):
         f"Received message from QQ: Message={str(event.get_message())} UserID={event.get_user_id()} GroupID={event.group_id} MessageID={event.message_id} "
         f"ReplyMessageID={event.reply.message_id if event.reply else None} SenderNickname={event.sender.nickname}"
     )
+    if event.get_plaintext().startswith(fwd.QQ_COMMAND_NAME):
+        args = event.get_plaintext().strip().split(" ")[1:]
+        if args[0] == "bind":
+            try:
+                token = args[1]
+            except:
+                if dis_id := uLocal.get_qq_bind_discord(event.get_user_id()):
+                    await matcher.finish(f"你已绑定 Discord({dis_id})", at_sender=True)
+                await matcher.finish(
+                    f"你还未绑定 Discord, 请到消息转发频道下发送「{DISCORD_COMMAND_PREFIX}bind <uid>」进行绑定",
+                    at_sender=True,
+                )
+            if (
+                    token in gv.temp_bind_discord
+                    and gv.temp_bind_qq[event.get_user_id()] == token
+            ):
+                set_qq_bind(gv.temp_bind_discord[token], event.get_user_id())
+                await uSend.send_message(
+                    f"<@{gv.temp_bind_discord[token]}> QQ `{event.get_user_id()}` 绑定成功",
+                    fwd
+                )
+                del gv.temp_bind_qq[event.get_user_id()]
+                del gv.temp_bind_discord[token]
+                await matcher.finish(f"Discord 绑定成功", at_sender=True)
+            else:
+                await matcher.finish("绑定 token 无效", at_sender=True)
+        elif args[0] == "debug":
+            logger.info("Value of message_id_records: " + str(gv.message_id_records))
+            await matcher.finish("Success", at_sender=True)
+        await matcher.finish(
+            fwd.BOT_NAME
+            + " 命令帮助\n"
+            + fwd.QQ_COMMAND_NAME
+            + " bind <token> - 绑定 Discord 账户\n"
+            + fwd.QQ_COMMAND_NAME
+            + " debug - 在日志中获取 message_id_records",
+            at_sender=True,
+        )
     msg = uLocal.replace_cq_at_with_ids(uLocal.process_text(str(event.get_message())))
     if msg.startswith(fwd.DISCORD_COMMAND_PREFIX * 2):
         await uSend.send_message(msg[2:], fwd)
@@ -114,52 +152,3 @@ async def _(matcher: Matcher, bot: Bot):
             gv.discord_bot_threads[-1].start()
             logger.success(f"Discord Bot {bot_id} thread started")
         matcher.destroy()
-
-
-@nonebot.on_command(QQ_COMMAND).handle()
-async def _(
-    matcher: Matcher, bot: Bot, event: GroupMessageEvent, args: Message = CommandArg()
-):
-    try:
-        fwd = uLocal.ForwardConfig(event.group_id)
-        if not fwd.forward:
-            return
-    except:
-        return
-    args = args.extract_plain_text().strip().split(" ")
-    if args[0] == "bind":
-        try:
-            token = args[1]
-        except:
-            if dis_id := uLocal.get_qq_bind_discord(event.get_user_id()):
-                await matcher.finish(f"你已绑定 Discord({dis_id})", at_sender=True)
-            await matcher.finish(
-                f"你还未绑定 Discord, 请到消息转发频道下发送「{DISCORD_COMMAND_PREFIX}bind <uid>」进行绑定",
-                at_sender=True,
-            )
-        if (
-            token in gv.temp_bind_discord
-            and gv.temp_bind_qq[event.get_user_id()] == token
-        ):
-            set_qq_bind(gv.temp_bind_discord[token], event.get_user_id())
-            await uSend.send_message(
-                f"<@{gv.temp_bind_discord[token]}> QQ `{event.get_user_id()}` 绑定成功",
-                fwd
-            )
-            del gv.temp_bind_qq[event.get_user_id()]
-            del gv.temp_bind_discord[token]
-            await matcher.finish(f"Discord 绑定成功", at_sender=True)
-        else:
-            await matcher.finish("绑定 token 无效", at_sender=True)
-    elif args[0] == "debug":
-        logger.info("Value of message_id_records: " + str(gv.message_id_records))
-        await matcher.finish("Success", at_sender=True)
-    await matcher.finish(
-        fwd.BOT_NAME
-        + " 命令帮助\n"
-        + fwd.QQ_COMMAND_NAME
-        + " bind <token> - 绑定 Discord 账户\n"
-        + fwd.QQ_COMMAND_NAME
-        + " debug - 在日志中获取 message_id_records",
-        at_sender=True,
-    )
