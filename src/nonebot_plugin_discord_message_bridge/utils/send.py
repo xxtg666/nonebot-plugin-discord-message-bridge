@@ -2,13 +2,12 @@ from nonebot import logger
 import httpx
 
 from .. import global_vars as gv
-from ..config import *
 
 
-async def webhook_send_message(username, avatar_url, content, images=[]):
+async def webhook_send_message(username, avatar_url, content, fwd, images=[]):
     async with httpx.AsyncClient() as client:
         resp = await client.post(
-            url=WEBHOOK_URL + "?wait=true",
+            url=fwd.WEBHOOK_URL + "?wait=true",
             data={"username": username, "avatar_url": avatar_url, "content": content},
             files=[
                 (
@@ -26,7 +25,7 @@ async def webhook_send_message(username, avatar_url, content, images=[]):
         return resp.json()["id"]
 
 
-async def send_message_with_files(file_paths, name, content, channel, uid):
+async def send_message_with_files(file_paths, name, content, fwd):
     async with httpx.AsyncClient() as client:
         files = []
         ix = 0
@@ -39,25 +38,25 @@ async def send_message_with_files(file_paths, name, content, channel, uid):
             )
             ix += 1
         await client.post(
-            url=f"https://discord.com/api/v10/channels/{channel}/messages",
-            headers={"Authorization": f"Bot {TOKEN}"},
+            url=f"https://discord.com/api/v10/channels/{fwd.CHANNEL}/messages",
+            headers={"Authorization": f"Bot {fwd.TOKEN}"},
             data={"content": f"<{name}> {content}"},
             files=files,
         )
 
 
-async def send_message(content, channel):
+async def send_message(content, fwd):
     async with httpx.AsyncClient() as client:
         await client.post(
-            url=f"https://discord.com/api/channels/{channel}/messages",
-            headers={"Authorization": f"Bot {TOKEN}", "User-Agent": "DiscordBot"},
+            url=f"https://discord.com/api/channels/{fwd.CHANNEL_ID}/messages",
+            headers={"Authorization": f"Bot {fwd.TOKEN}", "User-Agent": "DiscordBot"},
             data={"content": content},
         )
 
 
-async def send_list_message(content_list):
+async def send_list_message(content_list, fwd):
     for i in content_list:
         if not i[1]:
-            await send_message(i[0], CHANNEL_ID)
+            await send_message(i[0], fwd.CHANNEL_ID)
         else:
-            await gv.qq_bot.send_group_msg(group_id=QQ_ID, message=i[0])
+            await gv.qq_bot.send_group_msg(group_id=fwd.QQ_GROUP_ID, message=i[0])

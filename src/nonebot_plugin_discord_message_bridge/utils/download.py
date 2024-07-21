@@ -1,14 +1,13 @@
 import httpx
-import os
 import re
 
 from ..config import *
 
 
-async def get_discord_message_content(message_id, e=True, removereply=False):
+async def get_discord_message_content(message_id, fwd, e=True, removereply=False):
     async with httpx.AsyncClient() as client:
-        url = f"https://discord.com/api/v10/channels/{CHANNEL_ID}/messages/{message_id}"
-        headers = {"Authorization": f"Bot {TOKEN}"}
+        url = f"https://discord.com/api/v10/channels/{fwd.CHANNEL_ID}/messages/{message_id}"
+        headers = {"Authorization": f"Bot {fwd.TOKEN}"}
         response = await client.get(url, headers=headers)
         message = response.json()["content"]
         if removereply:

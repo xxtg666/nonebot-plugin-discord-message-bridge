@@ -11,18 +11,23 @@ import copy
 import json
 import os
 
+from . import global_vars as gv
 from .config import *
 from .utils import local as uLocal
 from .utils import send as uSend
 from .utils import download as uDownload
+from .utils import yamlloader as uYaml
 from .bots import discordbot as bDiscord
-import global_vars as gv
+
 
 os.environ["HTTP_PROXY"] = HTTP_PROXY
 os.environ["HTTPS_PROXY"] = HTTP_PROXY
 if not os.path.exists(qq_bind_file):
     json.dump({}, uLocal.safe_open(qq_bind_file, "w"))
-
+if not os.path.exists(forwards_config_file):
+    uYaml.dump(uYaml.default_config_data, forwards_config_file)
+    logger.warning(f"转发配置文件已生成于 ( {os.path.abspath(forwards_config_file)} ) ,请配置后重启插件. 参考配置文件: https://github.com/xxtg666/nonebot-plugin-discord-message-bridge/blob/main/docs/dmb-config-example.yaml")
+gv.forward_config = uYaml.load(forwards_config_file)
 
 def set_qq_bind(discord_id, qq_id):
     qq_bind = json.load(open(qq_bind_file, "r"))
@@ -33,9 +38,8 @@ def set_qq_bind(discord_id, qq_id):
 @nonebot.on_message().handle()
 async def _(matcher: Matcher, bot: Bot, event: GroupMessageEvent):
     try:
-        if event.group_id == QQ_ID:
-            channel = CHANNEL_ID
-        else:
+        fwd = uLocal.ForwardConfig(event.group_id)
+        if not fwd.forward:
             return
     except:
         return
@@ -44,14 +48,14 @@ async def _(matcher: Matcher, bot: Bot, event: GroupMessageEvent):
         f"ReplyMessageID={event.reply.message_id if event.reply else None} SenderNickname={event.sender.nickname}"
     )
     msg = uLocal.replace_cq_at_with_ids(uLocal.process_text(str(event.get_message())))
-    if msg.startswith(DISCORD_COMMAND_PREFIX * 2):
-        await uSend.send_message(msg[2:], channel)
+    if msg.startswith(fwd.DISCORD_COMMAND_PREFIX * 2):
+        await uSend.send_message(msg[2:], fwd)
         return
     uid = event.get_user_id()
     msg_nocq = copy.deepcopy(msg)
     images = uLocal.get_url(msg)
     for i in uLocal.get_cq_images(msg):
-        msg_nocq = msg_nocq.replace(i, " [图片] ")
+        msg_nocq = msg_nocq.replace(i, fwd.IMAGE_PLACEHOLDER)
     if event.reply:
         if reply_to_dc_id := uLocal.get_another_message_id(
             event.reply.message_id, "qq"
@@ -59,37 +63,38 @@ async def _(matcher: Matcher, bot: Bot, event: GroupMessageEvent):
             msg_content = (
                 (
                     await uDownload.get_discord_message_content(
-                        reply_to_dc_id, removereply=True
+                        reply_to_dc_id, fwd, removereply=True
                     )
                 )
                 .strip()
                 .replace("\n", " ")
             )
             msg_nocq = (
-                f"> {uLocal.generate_message_link(reply_to_dc_id)}\n> *{msg_content}*\n"
+                f"> {uLocal.generate_message_link(reply_to_dc_id, fwd)}\n> *{msg_content}*\n"
                 + msg_nocq
             )
-    msgid = await uSend.webhook_send_message(
-        event.sender.nickname + " [QQ]", uLocal.get_qq_avatar_url(uid), msg_nocq, images
+    msg_id = await uSend.webhook_send_message(
+        event.sender.nickname + " [QQ]", uLocal.get_qq_avatar_url(uid), msg_nocq, fwd, images
     )
-    uLocal.record_message_id(event.message_id, msgid)
+    uLocal.record_message_id(event.message_id, msg_id)
 
 
 @nonebot.on_notice().handle()
 async def _(matcher: Matcher, bot: Bot, event: GroupRecallNoticeEvent):
     try:
-        if event.group_id != QQ_ID:
+        fwd = uLocal.ForwardConfig(event.group_id)
+        if not fwd.forward:
             return
     except:
         return
     if dc_id := uLocal.get_another_message_id(event.message_id, "qq"):
         async with httpx.AsyncClient() as client:
             await client.patch(
-                url=WEBHOOK_URL + "/messages/" + dc_id,
+                url=fwd.WEBHOOK_URL + "/messages/" + dc_id,
                 headers={"Content-Type": "application/json"},
                 json={
                     "content": "||"
-                    + (await uDownload.get_discord_message_content(dc_id, False))
+                    + (await uDownload.get_discord_message_content(dc_id, fwd, e=False))
                     + "||"
                 },
             )
@@ -100,9 +105,14 @@ async def _(matcher: Matcher, bot: Bot):
     if not gv.already_started_discord_bot:
         gv.qq_bot = bot
         gv.already_started_discord_bot = True
-        gv.discord_bot_thread = threading.Thread(target=bDiscord.startDiscordBot)
-        gv.discord_bot_thread.start()
-        logger.success("Discord Bot thread started")
+        for bot_id, bot_token in gv.forward_config["bots"].items():
+            notice_qq_groups = []
+            for forward in gv.forward_config["forwards"]:
+                if forward["bot-id"] == bot_id:
+                    notice_qq_groups.append(forward["qq-group-id"])
+            gv.discord_bot_threads.append(threading.Thread(target=bDiscord.startDiscordBot, args=(bot_token, bot_id, notice_qq_groups)))
+            gv.discord_bot_threads[-1].start()
+            logger.success(f"Discord Bot {bot_id} thread started")
         matcher.destroy()
 
 
@@ -111,9 +121,8 @@ async def _(
     matcher: Matcher, bot: Bot, event: GroupMessageEvent, args: Message = CommandArg()
 ):
     try:
-        if event.group_id == QQ_ID:
-            channel = CHANNEL_ID
-        else:
+        fwd = uLocal.ForwardConfig(event.group_id)
+        if not fwd.forward:
             return
     except:
         return
@@ -135,19 +144,13 @@ async def _(
             set_qq_bind(gv.temp_bind_discord[token], event.get_user_id())
             await uSend.send_message(
                 f"<@{gv.temp_bind_discord[token]}> QQ `{event.get_user_id()}` 绑定成功",
-                channel,
+                fwd
             )
             del gv.temp_bind_qq[event.get_user_id()]
             del gv.temp_bind_discord[token]
             await matcher.finish(f"Discord 绑定成功", at_sender=True)
         else:
             await matcher.finish("绑定 token 无效", at_sender=True)
-    elif args[0] == "restart":
-        gv.bot_restart_times = 0
-        gv.discord_bot_thread = None
-        gv.discord_bot_thread = threading.Thread(target=bDiscord.startDiscordBot)
-        gv.discord_bot_thread.start()
-        await matcher.finish("正在尝试重启转发 Bot", at_sender=True)
     elif args[0] == "debug":
         logger.info("Value of message_id_records: " + str(gv.message_id_records))
         await matcher.finish("Success", at_sender=True)
@@ -156,8 +159,6 @@ async def _(
         + " 命令帮助\n"
         + gv.qq_command_name
         + " bind <token> - 绑定 Discord 账户\n"
-        + gv.qq_command_name
-        + " restart - 手动重启转发 Bot\n"
         + gv.qq_command_name
         + " debug - 在日志中获取 message_id_records",
         at_sender=True,
