@@ -1,5 +1,6 @@
 import yaml
 
+from .local import safe_open
 
 class CustomDumper(yaml.Dumper):
     def represent_none(self, data):
@@ -25,10 +26,10 @@ default_config_data = {
 
 
 def dump(file_path: str, data: dict):
-    with open(file_path, 'w', encoding='utf-8') as f:
+    with safe_open(file_path, 'w', encoding='utf-8') as f:
         yaml.dump(data, f, Dumper=CustomDumper, default_flow_style=False, allow_unicode=True)
 
 
 def load(file_path: str) -> dict:
-    with open(file_path, 'r', encoding='utf-8') as f:
+    with safe_open(file_path, 'r', encoding='utf-8') as f:
         return yaml.load(f, Loader=yaml.FullLoader)

@@ -73,11 +73,11 @@ def replace_ids_with_cq_at(msg):
     return replaced_msg
 
 
-def safe_open(file_path, mode):
+def safe_open(file_path, mode, *args, **kwargs):
     directory = os.path.dirname(file_path)
     if not os.path.exists(directory):
         os.makedirs(directory)
-    return open(file_path, mode)
+    return open(file_path, mode, *args, **kwargs)
 
 
 def get_another_message_id(_id, this):
