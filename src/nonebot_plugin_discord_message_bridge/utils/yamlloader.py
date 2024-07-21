@@ -25,7 +25,7 @@ default_config_data = {
 }
 
 
-def dump(file_path: str, data: dict):
+def dump(data: dict, file_path: str):
     with safe_open(file_path, 'w', encoding='utf-8') as f:
         yaml.dump(data, f, Dumper=CustomDumper, default_flow_style=False, allow_unicode=True)
 
