@@ -26,8 +26,8 @@ def genRandomID(k: int = 8) -> str:
     return "".join(random.choices("abcdefghijklmnopqrstuvwxyz0123456789", k=k))
 
 
-def get_qq_avatar_url(qq_user_uid):
-    return "http://q1.qlogo.cn/g?b=qq&nk=" + str(qq_user_uid) + "&s=640"
+def get_qq_avatar_url(qq_user_id):
+    return "http://q1.qlogo.cn/g?b=qq&nk=" + str(qq_user_id) + "&s=640"
 
 
 def process_text(text: str):

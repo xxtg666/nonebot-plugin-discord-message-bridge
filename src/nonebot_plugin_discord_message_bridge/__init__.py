@@ -143,6 +143,7 @@ async def _(
         else:
             await matcher.finish("绑定 token 无效", at_sender=True)
     elif args[0] == "restart":
+        gv.bot_restart_times = 0
         gv.discord_bot_thread = None
         gv.discord_bot_thread = threading.Thread(target=bDiscord.startDiscordBot)
         gv.discord_bot_thread.start()

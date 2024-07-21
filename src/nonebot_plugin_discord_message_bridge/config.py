@@ -3,17 +3,11 @@ from nonebot import get_plugin_config
 
 
 class Config(BaseModel):
-    dmb_bot_token: str
-    dmb_webhook_url: str
-    dmb_webhook_id: int
-    dmb_guild_id: int
-    dmb_channel_id: int
-    dmb_qq_id: int
-    dmb_qq_bind_file: str = "data/discord_message_bridge_qq_bind.json"
-    dmb_qq_forward_failed: str = "cry"
-    dmb_max_reply_preview_length: int = 100
-    dmb_max_message_id_record: int = 1000
     dmb_http_proxy: str = "http://127.0.0.1:7890"
+    dmb_qq_bind_file: str = "data/discord_message_bridge_qq_bind.json"
+    dmb_max_message_id_record: int = 3000
+    dmb_forward_failed_reaction: str = "cry"
+    dmb_max_reply_preview_length: int = 100
     dmb_prefix: str = "[Discord] "
     dmb_bot_name: str = "Discord Message Bridge"
     dmb_qq_sudo_format: str = "/sudo {Q} {C}"
@@ -47,7 +41,7 @@ CHANNEL_ID = config.dmb_channel_id
 QQ_ID = config.dmb_qq_id
 
 # 转发失败时添加的 reaction 名称 (支持自定义表情符号)
-QQ_FORWARD_FAILED = config.dmb_qq_forward_failed
+QQ_FORWARD_FAILED = config.dmb_forward_failed_reaction
 
 # QQ - Discord 用户 id 绑定文件路径
 qq_bind_file = config.dmb_qq_bind_file

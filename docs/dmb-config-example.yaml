@@ -1,0 +1,19 @@
+bots: # id:token
+  1: XXX
+  2: XXX
+
+forwards: # 写 ~ 或者不写该配置项表示使用全局配置(.env)
+  -
+    bot-id: 1
+    guild-id: 123456
+    channel-id: 123456
+    webhook-url: "https://discord.com/api/webhooks/123456/XXX"
+    webhook-id: 123456
+    qq-group-id: 123456
+    forward-failed-reaction: ~
+    discord-command-prefix: ~
+    qq-sudo-format: ~
+    qq-command-prefix: ~
+    qq-command: ~
+    bot-name: ~
+    prefix: ~
