@@ -1,6 +1,7 @@
 from nonebot import logger
 import httpx
 
+from .. import global_vars as gv
 from ..config import *
 
 
@@ -52,3 +53,11 @@ async def send_message(content, channel):
             headers={"Authorization": f"Bot {TOKEN}", "User-Agent": "DiscordBot"},
             data={"content": content},
         )
+
+
+async def send_list_message(content_list):
+    for i in content_list:
+        if not i[1]:
+            await send_message(i[0], CHANNEL_ID)
+        else:
+            await gv.qq_bot.send_group_msg(group_id=QQ_ID, message=i[0])

@@ -12,13 +12,15 @@ class Config(BaseModel):
     dmb_qq_bind_file: str = "data/discord_message_bridge_qq_bind.json"
     dmb_qq_forward_failed: str = "cry"
     dmb_max_reply_preview_length: int = 100
+    dmb_max_message_id_record: int = 1000
     dmb_http_proxy: str = "http://127.0.0.1:7890"
     dmb_prefix: str = "[Discord] "
     dmb_bot_name: str = "Discord Message Bridge"
     dmb_qq_sudo_format: str = "/sudo {Q} {C}"
     dmb_qq_command: str = "dmb"
     dmb_discord_command_prefix: str = "~"
-    dmb_qq_command_prefix: str  = "."
+    dmb_qq_command_prefix: str = "."
+
 
 config = get_plugin_config(Config)
 
@@ -52,6 +54,9 @@ qq_bind_file = config.dmb_qq_bind_file
 
 # 转发回复消息时显示的原消息内容的最大长度
 MAX_REPLY_PREVIEW_LENGTH = config.dmb_max_reply_preview_length
+
+# 记录 QQ 与 Discord 消息互相对应 id 的最大数量
+MAX_MESSAGE_ID_RECORD = config.dmb_max_message_id_record
 
 # 转发消息前缀
 PREFIX = config.dmb_prefix

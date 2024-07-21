@@ -29,11 +29,6 @@ async def get_discord_message_content(message_id, e=True, removereply=False):
 
 
 async def download_image(url):
-    async with httpx.AsyncClient(
-        proxies={
-            "http://": os.environ["HTTP_PROXY"],
-            "https://": os.environ["HTTP_PROXY"],
-        }
-    ) as client:
+    async with httpx.AsyncClient() as client:
         response = await client.get(url)
         return response.content

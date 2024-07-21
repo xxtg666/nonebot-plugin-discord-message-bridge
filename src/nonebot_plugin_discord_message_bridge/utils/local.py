@@ -5,10 +5,11 @@ import re
 import os
 
 from ..config import *
+from .. import global_vars as gv
 
 
-def generate_message_link(dc_id):
-    return f"https://discord.com/channels/{GUILD_ID}/{CHANNEL_ID}/{dc_id}"
+def generate_message_link(discord_message_id):
+    return f"https://discord.com/channels/{GUILD_ID}/{CHANNEL_ID}/{discord_message_id}"
 
 
 def get_qq_bind(discord_id):
@@ -16,15 +17,17 @@ def get_qq_bind(discord_id):
 
 
 def get_qq_bind_discord(qq_id):
-    return {qq: dis for dis, qq in json.load(open(qq_bind_file, "r")).items()}.get(str(qq_id), False)
+    return {qq: dis for dis, qq in json.load(open(qq_bind_file, "r")).items()}.get(
+        str(qq_id), False
+    )
 
 
 def genRandomID(k: int = 8) -> str:
     return "".join(random.choices("abcdefghijklmnopqrstuvwxyz0123456789", k=k))
 
 
-def get_avatar_url(uid):
-    return "http://q1.qlogo.cn/g?b=qq&nk=" + str(uid) + "&s=640"
+def get_qq_avatar_url(qq_user_uid):
+    return "http://q1.qlogo.cn/g?b=qq&nk=" + str(qq_user_uid) + "&s=640"
 
 
 def process_text(text: str):
@@ -75,3 +78,21 @@ def safe_open(file_path, mode):
     if not os.path.exists(directory):
         os.makedirs(directory)
     return open(file_path, mode)
+
+
+def get_another_message_id(_id, this):
+    if this == "qq":
+        for i in gv.message_id_records:
+            if i[0] == str(_id):
+                return i[1]
+    elif this == "dc":
+        for i in gv.message_id_records:
+            if i[1] == str(_id):
+                return i[0]
+    return None
+
+
+def record_message_id(qq_id, dc_id):
+    gv.message_id_records.append((str(qq_id), str(dc_id)))
+    if len(gv.message_id_records) > MAX_MESSAGE_ID_RECORD:
+        gv.message_id_records.pop(0)
