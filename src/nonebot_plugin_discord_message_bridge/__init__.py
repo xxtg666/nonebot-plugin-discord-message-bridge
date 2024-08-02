@@ -95,12 +95,11 @@ async def _(matcher: Matcher, bot: Bot, event: GroupMessageEvent):
             pass
         else:
             messages = parser.messages
-            origin_message = "<details><summary>合并转发</summary>"
+            origin_message = "# 合并转发"
             for message in messages:
                 text = uLocal.process_text(str(message[1]))
                 origin_message += f"\n\n> **{message[0]['nickname']} ({message[0]['user_id']}):**\n> "
                 origin_message += uLocal.process_text(text).replace("\n", "\n> ")
-            origin_message += "</details>"
     else:
         origin_message = uLocal.process_text(origin_message)
     msg = uLocal.replace_cq_at_with_ids(origin_message)
