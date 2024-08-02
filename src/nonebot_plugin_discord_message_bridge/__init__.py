@@ -2,9 +2,7 @@ import nonebot
 from nonebot import logger
 from nonebot.matcher import Matcher
 from nonebot.adapters.onebot.v11 import Bot, GroupMessageEvent
-from nonebot.adapters.onebot.v11.message import Message
 from nonebot.adapters.onebot.v11.event import GroupRecallNoticeEvent
-from nonebot.params import CommandArg
 import threading
 import httpx
 import copy
@@ -13,6 +11,7 @@ import os
 
 from . import global_vars as gv
 from .config import *
+from .utils import forward as uForward
 from .utils import local as uLocal
 from .utils import send as uSend
 from .utils import download as uDownload
@@ -86,7 +85,25 @@ async def _(matcher: Matcher, bot: Bot, event: GroupMessageEvent):
             + " debug - 在日志中获取 message_id_records",
             at_sender=True,
         )
-    msg = uLocal.replace_cq_at_with_ids(uLocal.process_text(str(event.get_message())))
+    message = event.get_message()
+    origin_message = str(message)
+    if origin_message.startswith("[CQ:forward"):
+        try:
+            parser = uForward.ForwardMessageParser(bot, message[0])
+            await parser.parse()
+        except Exception:
+            pass
+        else:
+            messages = parser.messages
+            origin_message = "<details><summary>合并转发</summary>"
+            for message in messages:
+                text = uLocal.process_text(str(message[1]))
+                origin_message += f"\n\n> **{message[0]['nickname']} ({message[0]['user_id']}):**\n> "
+                origin_message += uLocal.process_text(text).replace("\n", "\n> ")
+            origin_message += "</details>"
+    else:
+        origin_message = uLocal.process_text(origin_message)
+    msg = uLocal.replace_cq_at_with_ids(origin_message)
     if msg.startswith(fwd.DISCORD_COMMAND_PREFIX * 2):
         await uSend.send_message(msg[2:], fwd)
         return
