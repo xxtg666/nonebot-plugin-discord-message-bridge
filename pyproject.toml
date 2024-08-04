@@ -16,4 +16,4 @@ dependencies = [
 ]
 requires-python = ">=3.9"
 readme = "README.md"
-license = { text = "MIT" }
+license = { text = "GPL-3" }
