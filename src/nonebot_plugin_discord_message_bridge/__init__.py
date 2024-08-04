@@ -98,10 +98,7 @@ async def _(matcher: Matcher, bot: Bot, event: GroupMessageEvent):
             origin_message = "# 合并转发"
             for message in messages:
                 text = uLocal.process_text(str(message[1]))
-                if str(message[0]["user_id"]) != "1094950020":
-                    origin_message += f"\n\n> **{message[0]['nickname']} ({message[0]['user_id']}):**\n> "
-                else:
-                    origin_message += f"\n\n> **{message[0]['nickname']}:**\n> "
+                origin_message += f"\n\n> **{message[0]['nickname']}:**\n> "
                 origin_message += uLocal.process_text(text).replace("\n", "\n> ")
     else:
         origin_message = uLocal.process_text(origin_message)
