@@ -23,6 +23,8 @@ class ForwardMessageParser:
         response = cast(dict[str, dict], await self.bot.get_forward_msg(id=segment.data["id"]))
         messages = []
         for message_data in response["messages"]:
-            message = Message(message_data["content"])
+            message = Message()
+            for seg in message_data["contnet"]:
+                message.append(MessageSegment(**seg))
             messages.append((message_data["sender"], message))
         return messages
