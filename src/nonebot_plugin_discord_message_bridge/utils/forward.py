@@ -24,7 +24,7 @@ class ForwardMessageParser:
         messages = []
         for message_data in response["messages"]:
             message = Message()
-            for seg in message_data["contnet"]:
+            for seg in message_data["content"]:
                 message.append(MessageSegment(**seg))
             messages.append((message_data["sender"], message))
         return messages
