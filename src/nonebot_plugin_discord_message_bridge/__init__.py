@@ -85,6 +85,7 @@ async def _(matcher: Matcher, bot: Bot, event: GroupMessageEvent):
             + " debug - 在日志中获取 message_id_records",
             at_sender=True,
         )
+    uid = event.get_user_id()
     message = event.get_message()
     origin_message = str(message)
     if origin_message.startswith("[CQ:forward"):
@@ -117,7 +118,6 @@ async def _(matcher: Matcher, bot: Bot, event: GroupMessageEvent):
     if msg.startswith(fwd.DISCORD_COMMAND_PREFIX * 2):
         await uSend.send_message(msg[2:], fwd)
         return
-    uid = event.get_user_id()
     msg_nocq = copy.deepcopy(msg)
     images = uLocal.get_url(msg)
     for i in uLocal.get_cq_images(msg):
