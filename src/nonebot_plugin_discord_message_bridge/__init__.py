@@ -98,8 +98,19 @@ async def _(matcher: Matcher, bot: Bot, event: GroupMessageEvent):
             origin_message = "# 合并转发"
             for message in messages:
                 text = uLocal.process_text(str(message[1]))
-                origin_message += f"\n\n> **{message[0]['nickname']}:**\n> "
-                origin_message += uLocal.process_text(text).replace("\n", "\n> ")
+                current_message = f"\n\n> **{message[0]['nickname']}:**\n> "
+                current_message += uLocal.process_text(text).replace("\n", "\n> ")
+                if len(origin_message) >= 2000:
+                    msg = uLocal.replace_cq_at_with_ids(origin_message)
+                    msg_nocq = copy.deepcopy(msg)
+                    images = uLocal.get_url(msg)
+                    for i in uLocal.get_cq_images(msg):
+                        msg_nocq = msg_nocq.replace(i, fwd.IMAGE_PLACEHOLDER)
+                    msg_id = await uSend.webhook_send_message(
+                        event.sender.nickname + " [QQ]", uLocal.get_qq_avatar_url(uid), msg_nocq, fwd, images
+                    )
+                    uLocal.record_message_id(event.message_id, msg_id)
+                origin_message = current_message
     else:
         origin_message = uLocal.process_text(origin_message)
     msg = uLocal.replace_cq_at_with_ids(origin_message)
