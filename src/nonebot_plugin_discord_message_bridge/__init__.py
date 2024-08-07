@@ -101,7 +101,7 @@ async def _(matcher: Matcher, bot: Bot, event: GroupMessageEvent):
                 text = uLocal.process_text(str(message[1]))
                 current_message = f"\n\n> **{message[0]['nickname']}:**\n> "
                 current_message += uLocal.process_text(text).replace("\n", "\n> ")
-                if len(origin_message) >= 2000:
+                if len(origin_message) >= 1500:
                     msg = uLocal.replace_cq_at_with_ids(origin_message)
                     msg_nocq = copy.deepcopy(msg)
                     images = uLocal.get_url(msg)
