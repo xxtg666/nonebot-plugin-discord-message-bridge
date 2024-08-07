@@ -135,6 +135,8 @@ async def _(matcher: Matcher, bot: Bot, event: GroupMessageEvent):
                 .strip()
                 .replace("\n", " ")
             )
+            if msg_content.startswith("# 合并转发"):
+                msg_content = "[合并转发]"
             msg_nocq = (
                 f"> {uLocal.generate_message_link(reply_to_dc_id, fwd)}\n> *{msg_content}*\n"
                 + msg_nocq
