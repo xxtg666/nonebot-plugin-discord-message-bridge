@@ -111,7 +111,8 @@ async def _(matcher: Matcher, bot: Bot, event: GroupMessageEvent):
                         event.sender.nickname + " [QQ]", uLocal.get_qq_avatar_url(uid), msg_nocq, fwd, images
                     )
                     uLocal.record_message_id(event.message_id, msg_id)
-                origin_message = current_message
+                    origin_message = ""
+                origin_message += current_message
     else:
         origin_message = uLocal.process_text(origin_message)
     msg = uLocal.replace_cq_at_with_ids(origin_message)
