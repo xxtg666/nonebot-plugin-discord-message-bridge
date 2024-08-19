@@ -106,7 +106,7 @@ async def _(matcher: Matcher, bot: Bot, event: GroupMessageEvent):
                         msg_nocq = copy.deepcopy(msg)
                         images = uLocal.get_url(msg)
                         for i in uLocal.get_cq_images(msg):
-                            msg_nocq = msg_nocq.replace(i, fwd.IMAGE_PLACEHOLDER)
+                            msg_nocq = msg_nocq.replace(i, IMAGE_PLACEHOLDER)
                         msg_id = await uSend.webhook_send_message(
                             event.sender.nickname + " [QQ]", uLocal.get_qq_avatar_url(uid), msg_nocq, fwd, images
                         )
