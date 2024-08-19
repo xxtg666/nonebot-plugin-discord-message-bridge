@@ -84,10 +84,14 @@ def get_another_message_id(_id, this):
     if this == "qq":
         for i in gv.message_id_records:
             if i[0] == str(_id):
+                gv.message_id_records.remove(i)
+                gv.message_id_records.append(i)
                 return i[1]
     elif this == "dc":
         for i in gv.message_id_records:
             if i[1] == str(_id):
+                gv.message_id_records.remove(i)
+                gv.message_id_records.append(i)
                 return i[0]
     return None
 
