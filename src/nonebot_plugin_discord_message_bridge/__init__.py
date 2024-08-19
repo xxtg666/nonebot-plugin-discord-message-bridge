@@ -27,6 +27,7 @@ if not os.path.exists(forwards_config_file):
     uYaml.dump(uYaml.default_config_data, forwards_config_file)
     logger.warning(f"转发配置文件已生成于 ( {os.path.abspath(forwards_config_file)} ) ,请配置后重启插件. 参考配置文件: https://github.com/xxtg666/nonebot-plugin-discord-message-bridge/blob/main/docs/dmb-config-example.yaml")
 gv.forward_config = uYaml.load(forwards_config_file)
+uLocal.load_forward_config()
 
 
 def set_qq_bind(discord_id, qq_id):
