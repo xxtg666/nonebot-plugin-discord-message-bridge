@@ -8,10 +8,6 @@ from ..config import *
 from .. import global_vars as gv
 
 
-def generate_message_link(discord_message_id, fwd):
-    return f"https://discord.com/channels/{fwd.GUILD_ID}/{fwd.CHANNEL_ID}/{discord_message_id}"
-
-
 def get_qq_bind(discord_id):
     return json.load(open(qq_bind_file, "r")).get(str(discord_id), False)
 
@@ -112,6 +108,10 @@ def get_qq_group_id(qq_group_num):
 
 def get_discord_channel(discord_channel_num):
     return gv.forward_config["discord-channels"][discord_channel_num]
+
+
+def generate_message_link(discord_message_id, fwd):
+    return f"https://discord.com/channels/{get_discord_channel(fwd['discord-channel'])['guild-id']}/{get_discord_channel(fwd['discord-channel'])['channel-id']}/{discord_message_id}"
 
 
 def load_forward_config():
