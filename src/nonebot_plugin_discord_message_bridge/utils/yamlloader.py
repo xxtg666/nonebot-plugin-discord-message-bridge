@@ -2,13 +2,13 @@ import yaml
 
 from .local import safe_open
 
+
 class CustomDumper(yaml.Dumper):
     def represent_none(self, data):
         return self.represent_scalar('tag:yaml.org,2002:null', '~')
 
 
 CustomDumper.add_representer(type(None), CustomDumper.represent_none)
-
 
 default_config_data = {
     'discord-bots': {
@@ -22,11 +22,14 @@ default_config_data = {
             'channel-id': 123456,
             'webhook-url': 'https://discord.com/api/webhooks/123456/XXX'
         }
-    }, 'qq-groups': {
+    },
+    'qq-groups': {
         1: 123456
-    }, 'forwards': [
+    },
+    'forwards': [
         {
             'type': 0,
+            'silent': False,
             'discord-channel': 1,
             'qq-group': 1
         }

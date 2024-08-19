@@ -15,5 +15,6 @@ qq-groups: # num:group-id
 forwards:
   -
     type: 0 # 0: 双向转发, 1: 仅 QQ -> Discord, 2: 仅 Discord -> QQ
+    silent: false # 为 true 时不反馈转发失败等，不响应命令
     discord-channel: 1
     qq-group: 1

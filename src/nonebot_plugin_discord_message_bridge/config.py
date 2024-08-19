@@ -12,7 +12,6 @@ class Config(BaseModel):
     dmb_prefix: str = "[Discord] "
     dmb_image_placeholder: str = " [图片] "
     dmb_bot_name: str = "Discord Message Bridge"
-    dmb_qq_sudo_format: str = "/sudo {Q} {C}"
     dmb_qq_command: str = "dmb"
     dmb_discord_command_prefix: str = "~"
     dmb_qq_command_prefix: str = "."
@@ -49,16 +48,10 @@ IMAGE_PLACEHOLDER = config.dmb_image_placeholder
 BOT_NAME = config.dmb_bot_name
 
 # QQ 机器人命令名
-QQ_COMMAND = config.dmb_qq_command
+QQ_COMMAND_NAME = config.dmb_qq_command
 
 # QQ 机器人命令前缀
 QQ_COMMAND_PREFIX = config.dmb_qq_command_prefix
 
 # Discord 机器人命令前缀
 DISCORD_COMMAND_PREFIX = config.dmb_discord_command_prefix
-
-# QQ 转发机器人以用户身份调用其它机器人时发送消息的格式
-# 若其它机器人支持此功能，才可使用，否则请留空
-# {Q} 自动替换为用户对应的 QQ 号
-# {C} 自动替换为用户发送的内容
-QQ_SUDO_FORMAT = config.dmb_qq_sudo_format

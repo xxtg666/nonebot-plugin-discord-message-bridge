@@ -7,3 +7,4 @@ temp_bind_qq = {}  # qq:rid
 temp_bind_discord = {}  # rid:dis
 message_id_records = []  # (qq:dc)
 forward_config = {}
+loaded_forward_config = {}
