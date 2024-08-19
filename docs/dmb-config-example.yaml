@@ -1,38 +1,19 @@
-bots: # id:token
+discord-bots: # num:token
   1: XXX
   2: XXX
 
-forwards: # 不写该配置项(不要写 ~ ,直接移除那一行)表示使用全局配置(.env)
-  -
-    bot-id: 1
+discord-channels:
+  1:
+    bot: 1
     guild-id: 123456
     channel-id: 123456
     webhook-url: "https://discord.com/api/webhooks/123456/XXX"
-    webhook-id: 123456
-    qq-group-id: 123456
-    forward-failed-reaction: ~
-    discord-command-prefix: ~
-    qq-sudo-format: ~
-    qq-command-prefix: ~
-    qq-command: ~
-    bot-name: ~
-    prefix: ~
-    image-placeholder: ~
-  -
-    bot-id: 2
-    guild-id: 234567
-    channel-id: 234567
-    webhook-url: "https://discord.com/api/webhooks/234567/XXX"
-    webhook-id: 234567
-    qq-group-id: 234567
-    forward-failed-reaction: ~
-    discord-command-prefix: ~
-    qq-sudo-format: ~
-    qq-command-prefix: ~
-    qq-command: ~
-    bot-name: ~
-    prefix: ~
-    image-placeholder: ~
 
-# 确保每个转发配置中 channel-id 与 qq-group-id 唯一，否则可能会出现意料之外的错误
-# 可以多个转发配置使用同一个 bot-id
+qq-groups: # num:group-id
+  1: 123456
+
+forwards:
+  -
+    type: 0 # 0: 双向转发, 1: 仅 QQ -> Discord, 2: 仅 Discord -> QQ
+    discord-channel: 1
+    qq-group: 1
