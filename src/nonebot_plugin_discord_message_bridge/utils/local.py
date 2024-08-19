@@ -103,7 +103,7 @@ def record_message_id(qq_id, dc_id):
 
 
 def get_bot_token(bot_id):
-    return gv.forward_config["bots"][bot_id]
+    return gv.forward_config["discord-bots"][bot_id]
 
 
 def get_qq_group_id(qq_group_num):
