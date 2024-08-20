@@ -29,7 +29,6 @@ default_config_data = {
     'forwards': [
         {
             'type': 0,
-            'silent': False,
             'discord-channel': 1,
             'qq-group': 1
         }

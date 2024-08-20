@@ -11,11 +11,14 @@ class Config(BaseModel):
     dmb_max_reply_preview_length: int = 100
     dmb_prefix: str = "[Discord] "
     dmb_image_placeholder: str = " [图片] "
+    dmb_edit_placeholder: str = "[编辑消息] "
+    dmb_delete_placeholder: str = "[消息已被删除]"
     dmb_bot_name: str = "Discord Message Bridge"
     dmb_qq_command: str = "dmb"
     dmb_discord_command_prefix: str = "~"
     dmb_qq_command_prefix: str = "."
     dmb_no_traceback: bool = False
+    dmb_qq_send_interval: float = 0.2
 
 
 config = get_plugin_config(Config)
@@ -45,6 +48,12 @@ PREFIX = config.dmb_prefix
 # 转发图片占位符
 IMAGE_PLACEHOLDER = config.dmb_image_placeholder
 
+# 编辑消息占位符
+EDIT_PLACEHOLDER = config.dmb_edit_placeholder
+
+# 消息已被删除占位符
+DELETE_PLACEHOLDER = config.dmb_delete_placeholder
+
 # Bot 名称
 BOT_NAME = config.dmb_bot_name
 
@@ -59,3 +68,6 @@ DISCORD_COMMAND_PREFIX = config.dmb_discord_command_prefix
 
 # 关闭报错反馈
 NO_TRACEBACK = config.dmb_no_traceback
+
+# 一对多发送消息间隔
+QQ_SEND_INTERVAL = config.dmb_qq_send_interval

@@ -4,6 +4,7 @@ from nonebot import logger
 from discord import app_commands
 import traceback
 import discord
+import asyncio
 
 from .. import global_vars as gv
 from ..config import *
@@ -119,6 +120,7 @@ def startDiscordBot(bot_token, bot_id):
                     if not fwd["silent"] and not NO_TRACEBACK:
                         await message.add_reaction(QQ_FORWARD_FAILED)
                         await message.reply("```" + traceback.format_exc() + "```")
+                await asyncio.sleep(QQ_SEND_INTERVAL)
 
         @discord_client.event
         async def on_message_edit(before, after):
@@ -133,7 +135,7 @@ def startDiscordBot(bot_token, bot_id):
                     if qq_id := uLocal.get_another_message_id(before.id, "dc"):
                         ms = (
                             MessageSegment.reply(int(qq_id))
-                            + "[编辑消息] "
+                            + EDIT_PLACEHOLDER
                             + after.content
                         )
                         msg_id = (
@@ -150,7 +152,7 @@ def startDiscordBot(bot_token, bot_id):
                     return
                 async with (message.channel.typing() if not fwd["silent"] else uLocal.NoneAsyncWith()):
                     if qq_id := uLocal.get_another_message_id(message.id, "dc"):
-                        ms = MessageSegment.reply(int(qq_id)) + "[消息已被删除]"
+                        ms = MessageSegment.reply(int(qq_id)) + DELETE_PLACEHOLDER
                         msg_id = (
                             await gv.qq_bot.send_group_msg(group_id=uLocal.get_qq_group_id(fwd['qq-group']), message=ms)
                         )["message_id"]
@@ -158,9 +160,10 @@ def startDiscordBot(bot_token, bot_id):
 
         discord_tree = app_commands.CommandTree(discord_client)
 
-        @discord_tree.command(name="debug-dmb", description="Get message_id_records")
+        @discord_tree.command(name="debug-dmb", description="Log message_id_records & loaded_forward_config")
         async def debug_dmb(interaction):
             logger.info("Value of message_id_records: " + str(gv.message_id_records))
+            logger.info("Value of loaded_forward_config: " + str(gv.loaded_forward_config))
             await interaction.response.send_message(f"Success")
 
         @discord_client.event
