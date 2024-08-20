@@ -18,3 +18,4 @@ forwards:
     silent: false # 为 true 时不反馈转发失败等，不响应命令
     discord-channel: 1
     qq-group: 1
+    discord-prefix: "[Discord] " # 默认，可不写该项

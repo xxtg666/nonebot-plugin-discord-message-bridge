@@ -96,7 +96,7 @@ def startDiscordBot(bot_token, bot_id):
                     return
                 ms = Message(
                     uLocal.replace_ids_with_cq_at(
-                        PREFIX + f"<{message.author.name}> {message.content}"
+                        fwd["discord-prefix"] + f"<{message.author.name}> {message.content}"
                     )
                 )
                 try:

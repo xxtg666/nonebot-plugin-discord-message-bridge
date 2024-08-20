@@ -120,6 +120,7 @@ def load_forward_config():
     gv.loaded_forward_config["qq-groups"] = {}
     gv.loaded_forward_config["discord-channels"] = {}
     for forward in gv.forward_config["forwards"]:
+        forward["discord-prefix"] = forward.get("discord-prefix", PREFIX)
         if forward["type"] == 0 or forward["type"] == 2:
             try:
                 gv.loaded_forward_config["discord-channels"][gv.forward_config["discord-channels"][forward["discord-channel"]]["channel-id"]].append(forward)
