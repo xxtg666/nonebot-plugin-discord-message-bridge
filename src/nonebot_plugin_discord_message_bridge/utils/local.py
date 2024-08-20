@@ -125,15 +125,16 @@ def load_forward_config():
         forward["silent"] = forward.get("silent", False)
         discord_channel = gv.forward_config["discord-channels"][forward["discord-channel"]]["channel-id"]
         qq_group = gv.forward_config["qq-groups"][forward["qq-group"]]
+        _type = "silent" if forward["silent"] else "normal"
         if forward["type"] == 0 or forward["type"] == 2:
-            logger.info(f"[DMB] {"silent" if forward["silent"] else "normal"} Forward: [Discord]{discord_channel} -> [QQ]{qq_group}")
+            logger.info(f"[DMB] {_type} Forward: [Discord]{discord_channel} -> [QQ]{qq_group}")
             try:
                 gv.loaded_forward_config["discord-channels"][discord_channel].append(forward)
             except KeyError:
                 gv.loaded_forward_config["discord-channels"][discord_channel] = [forward]
         if forward["type"] == 0 or forward["type"] == 1:
             logger.info(
-                f"[DMB] {"silent" if forward["silent"] else "normal"} Forward: [QQ]{qq_group} -> [Discord]{discord_channel}")
+                f"[DMB] {_type} Forward: [QQ]{qq_group} -> [Discord]{discord_channel}")
             try:
                 gv.loaded_forward_config["qq-groups"][qq_group].append(forward)
             except KeyError:
