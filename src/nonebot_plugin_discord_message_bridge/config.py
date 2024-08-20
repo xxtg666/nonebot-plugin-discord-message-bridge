@@ -15,6 +15,7 @@ class Config(BaseModel):
     dmb_qq_command: str = "dmb"
     dmb_discord_command_prefix: str = "~"
     dmb_qq_command_prefix: str = "."
+    dmb_no_traceback: bool = False
 
 
 config = get_plugin_config(Config)
@@ -55,3 +56,6 @@ QQ_COMMAND_PREFIX = config.dmb_qq_command_prefix
 
 # Discord 机器人命令前缀
 DISCORD_COMMAND_PREFIX = config.dmb_discord_command_prefix
+
+# 关闭报错反馈
+NO_TRACEBACK = config.dmb_no_traceback

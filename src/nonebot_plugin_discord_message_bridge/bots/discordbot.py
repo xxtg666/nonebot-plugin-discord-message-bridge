@@ -116,7 +116,7 @@ def startDiscordBot(bot_token, bot_id):
                         )["message_id"]
                         uLocal.record_message_id(msg_id, message.id)
                 except:
-                    if not fwd["silent"]:
+                    if not fwd["silent"] and not NO_TRACEBACK:
                         await message.add_reaction(QQ_FORWARD_FAILED)
                         await message.reply("```" + traceback.format_exc() + "```")
 
