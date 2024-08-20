@@ -45,8 +45,9 @@ plugin_dirs = ["src/plugins"]
 2. [下载本仓库](https://github.com/xxtg666/nonebot-plugin-discord-message-bridge/archive/refs/heads/main.zip)
 3. 将 `nonebot-plugin-discord-message-bridge-main` 文件夹中的 `nonebot_plugin_discord_message_bridge` 文件夹解压到插件目录
 4. 安装依赖
+> 进入 `requirements.txt` 同目录下执行
 ```bash
-pip install -r discord-py httpx nonebot2 'nonebot2[fastapi]' nonebot-adapter-onebot
+pip install -r requirements.txt
 ```
 
 </details>
