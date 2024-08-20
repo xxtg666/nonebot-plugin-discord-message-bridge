@@ -10,9 +10,12 @@ class Config(BaseModel):
     dmb_forward_failed_reaction: str = "😢"
     dmb_max_reply_preview_length: int = 100
     dmb_prefix: str = "[Discord] "
+    dmb_suffix: str = " [QQ]"
     dmb_image_placeholder: str = " [图片] "
     dmb_edit_placeholder: str = "[编辑消息] "
     dmb_delete_placeholder: str = "[消息已被删除]"
+    dmb_merge_forward_prefix: str = "# 合并转发"
+    dmb_merge_forward_placeholder: str = "[合并转发]"
     dmb_bot_name: str = "Discord Message Bridge"
     dmb_qq_command: str = "dmb"
     dmb_discord_command_prefix: str = "~"
@@ -42,8 +45,11 @@ MAX_REPLY_PREVIEW_LENGTH = config.dmb_max_reply_preview_length
 # 记录 QQ 与 Discord 消息互相对应 id 的最大数量
 MAX_MESSAGE_ID_RECORD = config.dmb_max_message_id_record
 
-# 转发消息前缀
+# Discord -> QQ 转发消息前缀
 PREFIX = config.dmb_prefix
+
+# QQ -> Discord 转发消息后缀
+SUFFIX = config.dmb_suffix
 
 # 转发图片占位符
 IMAGE_PLACEHOLDER = config.dmb_image_placeholder
@@ -53,6 +59,12 @@ EDIT_PLACEHOLDER = config.dmb_edit_placeholder
 
 # 消息已被删除占位符
 DELETE_PLACEHOLDER = config.dmb_delete_placeholder
+
+# 合并转发消息前缀
+MERGE_FORWARD_PREFIX = config.dmb_merge_forward_prefix
+
+# 合并转发消息回复占位符
+MERGE_FORWARD_PLACEHOLDER = config.dmb_merge_forward_placeholder
 
 # Bot 名称
 BOT_NAME = config.dmb_bot_name

@@ -142,6 +142,7 @@ def startDiscordBot(bot_token, bot_id):
                             await gv.qq_bot.send_group_msg(group_id=uLocal.get_qq_group_id(fwd['qq-group']), message=ms)
                         )["message_id"]
                         uLocal.record_message_id(msg_id, before.id)
+                await asyncio.sleep(QQ_SEND_INTERVAL)
 
         @discord_client.event
         async def on_message_delete(message):
@@ -157,6 +158,7 @@ def startDiscordBot(bot_token, bot_id):
                             await gv.qq_bot.send_group_msg(group_id=uLocal.get_qq_group_id(fwd['qq-group']), message=ms)
                         )["message_id"]
                         uLocal.record_message_id(msg_id, message.id)
+                await asyncio.sleep(QQ_SEND_INTERVAL)
 
         discord_tree = app_commands.CommandTree(discord_client)
 

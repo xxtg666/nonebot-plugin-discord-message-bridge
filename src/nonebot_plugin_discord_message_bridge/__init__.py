@@ -98,7 +98,7 @@ async def _(matcher: Matcher, bot: Bot, event: GroupMessageEvent):
                 pass
             else:
                 messages = parser.messages
-                origin_message = "# 合并转发"
+                origin_message = "" + MERGE_FORWARD_PREFIX
                 for message in messages:
                     text = uLocal.process_text(str(message[1]))
                     current_message = f"\n\n> **{message[0]['nickname']}:**\n> "
@@ -110,7 +110,7 @@ async def _(matcher: Matcher, bot: Bot, event: GroupMessageEvent):
                         for i in uLocal.get_cq_images(msg):
                             msg_nocq = msg_nocq.replace(i, IMAGE_PLACEHOLDER)
                         msg_id = await uSend.webhook_send_message(
-                            event.sender.nickname + " [QQ]", uLocal.get_qq_avatar_url(uid), msg_nocq, fwd, images
+                            event.sender.nickname + SUFFIX, uLocal.get_qq_avatar_url(uid), msg_nocq, fwd, images
                         )
                         uLocal.record_message_id(event.message_id, msg_id)
                         origin_message = ""
@@ -138,14 +138,14 @@ async def _(matcher: Matcher, bot: Bot, event: GroupMessageEvent):
                     .strip()
                     .replace("\n", " ")
                 )
-                if msg_content.startswith("# 合并转发"):
-                    msg_content = "[合并转发]"
+                if msg_content.startswith(MERGE_FORWARD_PREFIX):
+                    msg_content = "" + MERGE_FORWARD_PLACEHOLDER
                 msg_nocq = (
                     f"> {uLocal.generate_message_link(reply_to_dc_id, fwd)}\n> *{msg_content}*\n"
                     + msg_nocq
                 )
         msg_id = await uSend.webhook_send_message(
-            event.sender.nickname + " [QQ]", uLocal.get_qq_avatar_url(uid), msg_nocq, fwd, images
+            event.sender.nickname + SUFFIX, uLocal.get_qq_avatar_url(uid), msg_nocq, fwd, images
         )
         uLocal.record_message_id(event.message_id, msg_id)
 
