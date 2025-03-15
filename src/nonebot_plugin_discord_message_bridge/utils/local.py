@@ -37,7 +37,7 @@ def get_url(string):
 
 
 def get_cq_images(string):
-    cq_images = re.findall(r"\[CQ:image.*?\]", string) + re.findall(
+    cq_images = re.findall(r"\[CQ:image.*?\d+\]", string) + re.findall(
         r"\[CQ:mface.*?\]", string
     )
     return cq_images
