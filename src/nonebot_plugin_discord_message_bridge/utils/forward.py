@@ -9,7 +9,7 @@ async def get_forward_msg(id):
             headers={"Authorization": "Bearer "+FORWARD_MSG_GET_TOKEN},
             data={"message_id": id}
         )
-        return data
+        return data.json()
 
 async def upload_forward_msg(data):
     async with httpx.AsyncClient() as client:
