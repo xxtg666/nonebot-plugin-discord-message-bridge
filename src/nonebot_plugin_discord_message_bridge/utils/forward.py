@@ -1,30 +1,26 @@
-"""
-参考:
- https://github.com/Moonlark-Dev/XDbot2/blob/master/src/plugins/Core/plugins/cave.py#L333C2-L377C1
-"""
-
-from nonebot.adapters.onebot.v11 import Bot, Message, MessageSegment
-from typing import cast
+from ..config import *
+import httpx
 
 
-class ForwardMessageParser:
+async def get_forward_msg(id):
+    async with httpx.AsyncClient() as client:
+        data = await client.post(
+            FORWARD_MSG_GET_URL,
+            headers={"Authorization": "Bearer "+FORWARD_MSG_GET_TOKEN},
+            data={"message_id": id}
+        )
+        return data
 
-    def __init__(self, bot: Bot, segment: MessageSegment) -> None:
-        if segment.type != "forward":
-            raise TypeError
-        self.bot = bot
-        self.messages = []
-        self.segment = segment
+async def upload_forward_msg(data):
+    async with httpx.AsyncClient() as client:
+        response = await client.post(
+            FORWARD_MSG_UPLOAD_SERVER+"/upload",
+            json=data
+        )
+        if response.status_code == 200:
+            return response.json().get("chat_uuid", "")
+        else:
+            raise Exception("Failed to upload forward message")
 
-    async def parse(self) -> None:
-        self.messages = await self.get_forward(self.segment)
-
-    async def get_forward(self, segment: MessageSegment) -> list[tuple[dict, Message]]:
-        response = cast(dict[str, dict], await self.bot.get_forward_msg(id=segment.data["id"]))
-        messages = []
-        for message_data in response["messages"]:
-            message = Message()
-            for seg in message_data["content"]:
-                message.append(MessageSegment(**seg))
-            messages.append((message_data["sender"], message))
-        return messages
+def get_preview_url(uuid):
+    return FORWARD_MSG_PREVIEW_URL + uuid

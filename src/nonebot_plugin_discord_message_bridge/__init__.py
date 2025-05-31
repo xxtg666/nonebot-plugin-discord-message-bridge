@@ -30,6 +30,14 @@ if not os.path.exists(forwards_config_file):
 gv.forward_config = uYaml.load(forwards_config_file)
 uLocal.load_forward_config()
 
+if FORWARD_MSG_GET_URL and FORWARD_MSG_GET_TOKEN and FORWARD_MSG_UPLOAD_SERVER and FORWARD_MSG_PREVIEW_URL:
+    enable_forward_msg_parse = True
+else:
+    enable_forward_msg_parse = False
+    logger.warning(
+        "未配置转发消息获取地址与上传服务器, 将无法解析转发消息, 请在配置文件中设置 `dmb_forward_msg_get_url`, `dmb_forward_msg_get_token`, `dmb_forward_msg_upload_server` 和 `dmb_forward_msg_preview_url`"
+    )
+
 
 def set_qq_bind(discord_id, qq_id):
     qq_bind = json.load(open(qq_bind_file, "r"))
@@ -90,31 +98,12 @@ async def _(matcher: Matcher, bot: Bot, event: GroupMessageEvent):
         uid = event.get_user_id()
         message = event.get_message()
         origin_message = str(message)
-        if origin_message.startswith("[CQ:forward"):
-            try:
-                parser = uForward.ForwardMessageParser(bot, message[0])
-                await parser.parse()
-            except Exception:
-                pass
-            else:
-                messages = parser.messages
-                origin_message = "" + MERGE_FORWARD_PREFIX
-                for message in messages:
-                    text = uLocal.process_text(str(message[1]))
-                    current_message = f"\n\n> **{message[0]['nickname']}:**\n> "
-                    current_message += uLocal.process_text(text).replace("\n", "\n> ")
-                    if len(origin_message) >= 1500:
-                        msg = uLocal.replace_cq_at_with_ids(origin_message)
-                        msg_nocq = copy.deepcopy(msg)
-                        images = uLocal.get_url(msg)
-                        for i in uLocal.get_cq_images(msg):
-                            msg_nocq = msg_nocq.replace(i, IMAGE_PLACEHOLDER)
-                        msg_id = await uSend.webhook_send_message(
-                            event.sender.nickname + SUFFIX, uLocal.get_qq_avatar_url(uid), msg_nocq, fwd, images
-                        )
-                        uLocal.record_message_id(event.message_id, msg_id)
-                        origin_message = ""
-                    origin_message += current_message
+        if origin_message.startswith("[CQ:forward") and enable_forward_msg_parse:
+            forward_msg_id = origin_message[15:-1]
+            forward_data = await uForward.get_forward_msg(forward_msg_id)
+            chat_uuid = await uForward.upload_forward_msg(forward_data)
+            preview_url = uForward.get_preview_url(chat_uuid)
+            origin_message = f"[{FORWARD_MSG_PLACEHOLDER}]({preview_url})"
         else:
             origin_message = uLocal.process_text(origin_message)
         msg = uLocal.replace_cq_at_with_ids(origin_message)
@@ -138,8 +127,6 @@ async def _(matcher: Matcher, bot: Bot, event: GroupMessageEvent):
                     .strip()
                     .replace("\n", " ")
                 )
-                if msg_content.startswith(MERGE_FORWARD_PREFIX):
-                    msg_content = "" + MERGE_FORWARD_PLACEHOLDER
                 msg_nocq = (
                     f"> {uLocal.generate_message_link(reply_to_dc_id, fwd)}\n> *{msg_content}*\n"
                     + msg_nocq
