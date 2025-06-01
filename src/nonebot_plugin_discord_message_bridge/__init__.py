@@ -90,7 +90,7 @@ async def _(matcher: Matcher, bot: Bot, event: GroupMessageEvent):
                     if event.reply:
                         reply = str(event.reply.message)
                         if reply.startswith("[CQ:forward") and enable_forward_msg_parse:
-                            forward_msg_id = reply[15:-1]
+                            forward_msg_id = reply[15:-1].replace(",content=&", "")
                             chat_uuid = await uForward.get_forward_mapping(forward_msg_id)
                             await matcher.finish(FORWARD_PREVIEW_COMMAND + FORWARD_MSG_PREVIEW_URL + chat_uuid)
 

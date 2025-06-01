@@ -33,4 +33,4 @@ async def get_forward_mapping(id):
         if response.status_code == 200:
             return response.json().get("chat_uuid", "")
         else:
-            raise Exception("Failed to upload forward message")
+            raise Exception("Failed to get forward message mapping")
