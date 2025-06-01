@@ -101,7 +101,7 @@ async def _(matcher: Matcher, bot: Bot, event: GroupMessageEvent):
         if origin_message.startswith("[CQ:forward") and enable_forward_msg_parse:
             forward_msg_id = origin_message[15:-1]
             forward_data = await uForward.get_forward_msg(forward_msg_id)
-            chat_uuid = await uForward.upload_forward_msg(forward_data)
+            chat_uuid = await uForward.upload_forward_msg(forward_data, forward_msg_id)
             preview_url = uForward.get_preview_url(chat_uuid)
             origin_message = f"[{FORWARD_MSG_PLACEHOLDER}]({preview_url})"
         else:

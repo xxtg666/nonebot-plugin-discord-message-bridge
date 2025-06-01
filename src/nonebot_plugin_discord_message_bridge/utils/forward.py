@@ -11,10 +11,10 @@ async def get_forward_msg(id):
         )
         return data.json()
 
-async def upload_forward_msg(data):
+async def upload_forward_msg(data, id):
     async with httpx.AsyncClient() as client:
         response = await client.post(
-            FORWARD_MSG_UPLOAD_SERVER+"/upload",
+            FORWARD_MSG_UPLOAD_SERVER+"/upload/"+id,
             json=data
         )
         if response.status_code == 200:
