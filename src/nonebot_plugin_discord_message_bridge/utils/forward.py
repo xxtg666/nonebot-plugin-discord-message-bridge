@@ -14,7 +14,7 @@ async def get_forward_msg(id):
 async def upload_forward_msg(data, id):
     async with httpx.AsyncClient() as client:
         response = await client.post(
-            FORWARD_MSG_UPLOAD_SERVER+"/upload/"+id,
+            FORWARD_MSG_UPLOAD_SERVER + "/upload/" + id,
             json=data
         )
         if response.status_code == 200:
@@ -24,3 +24,13 @@ async def upload_forward_msg(data, id):
 
 def get_preview_url(uuid):
     return FORWARD_MSG_PREVIEW_URL + uuid
+
+async def get_forward_mapping(id):
+    async with httpx.AsyncClient() as client:
+        response = await client.get(
+            FORWARD_MSG_UPLOAD_SERVER + "/mapping/" + id
+        )
+        if response.status_code == 200:
+            return response.json().get("chat_uuid", "")
+        else:
+            raise Exception("Failed to upload forward message")

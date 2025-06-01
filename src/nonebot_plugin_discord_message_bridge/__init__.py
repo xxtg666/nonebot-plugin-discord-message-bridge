@@ -56,7 +56,7 @@ async def _(matcher: Matcher, bot: Bot, event: GroupMessageEvent):
             f"Received message from QQ: Message={str(event.get_message())} UserID={event.get_user_id()} GroupID={event.group_id} MessageID={event.message_id} "
             f"ReplyMessageID={event.reply.message_id if event.reply else None} SenderNickname={event.sender.nickname}"
         )
-        if event.get_plaintext().startswith(QQ_COMMAND_NAME) and not fwd["silent"]:
+        if event.get_plaintext().startswith(QQ_COMMAND_PREFIX + QQ_COMMAND_NAME) and not fwd["silent"]:
             args = event.get_plaintext().strip().split(" ")[1:]
             if args:
                 if args[0] == "bind":
@@ -86,12 +86,20 @@ async def _(matcher: Matcher, bot: Bot, event: GroupMessageEvent):
                 elif args[0] == "debug":
                     logger.info("Value of message_id_records: " + str(gv.message_id_records))
                     await matcher.finish("Success", at_sender=True)
+                elif args[0] == "preview":
+                    if event.reply:
+                        reply = str(event.reply.message)
+                        if reply.startswith("[CQ:forward") and enable_forward_msg_parse:
+                            forward_msg_id = reply[15:-1]
+                            chat_uuid = await uForward.get_forward_mapping(forward_msg_id)
+                            await matcher.finish(FORWARD_PREVIEW_COMMAND + FORWARD_MSG_PREVIEW_URL + chat_uuid)
+
             await matcher.finish(
                 BOT_NAME
                 + " 命令帮助\n"
-                + QQ_COMMAND_NAME
+                + QQ_COMMAND_PREFIX + QQ_COMMAND_NAME
                 + " bind <token> - 绑定 Discord 账户\n"
-                + QQ_COMMAND_NAME
+                + QQ_COMMAND_PREFIX + QQ_COMMAND_NAME
                 + " debug - 在日志中获取 message_id_records",
                 at_sender=True,
             )
@@ -107,7 +115,7 @@ async def _(matcher: Matcher, bot: Bot, event: GroupMessageEvent):
         else:
             origin_message = uLocal.process_text(origin_message)
         msg = uLocal.replace_cq_at_with_ids(origin_message)
-        if msg.startswith(DISCORD_COMMAND_PREFIX * 2):
+        if msg.startswith(DISCORD_COMMAND_PREFIX * 4):
             await uSend.send_message(msg[2:], fwd)
             return
         msg_nocq = copy.deepcopy(msg)

@@ -25,6 +25,7 @@ class Config(BaseModel):
     dmb_forward_msg_get_token: str = ""
     dmb_forward_msg_upload_server: str = ""
     dmb_forward_msg_preview_url: str = ""
+    dmb_forward_preview_command: str = ""
 
 
 config = get_plugin_config(Config)
@@ -95,3 +96,6 @@ FORWARD_MSG_UPLOAD_SERVER = config.dmb_forward_msg_upload_server
 
 # 转发消息预览地址
 FORWARD_MSG_PREVIEW_URL = config.dmb_forward_msg_preview_url
+
+# ？？？
+FORWARD_PREVIEW_COMMAND = config.dmb_forward_preview_command
