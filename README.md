@@ -43,7 +43,7 @@ plugin_dirs = ["src/plugins"]
 ```
 > 您需要确保此目录存在，下文将使用 `插件目录` 代指此目录。
 2. [下载本仓库](https://github.com/xxtg666/nonebot-plugin-discord-message-bridge/archive/refs/heads/main.zip)
-3. 将 `nonebot-plugin-discord-message-bridge-main` 文件夹中的 `nonebot_plugin_discord_message_bridge` 文件夹解压到插件目录
+3. 将 `src` 文件夹中的 `nonebot_plugin_discord_message_bridge` 文件夹解压到插件目录
 4. 安装依赖
 > 进入 `requirements.txt` 同目录下执行
 ```bash
@@ -65,7 +65,7 @@ pip install nonebot-plugin-discord-message-bridge
 
 ## ⚙️ 配置
 
-请修改在机器人目录中创建一个 `.env` 文件（或编辑对应 `.env` 文件，可能为 `.env.dev` 或 `.env.prod`），并参考 [🔗config.py](https://github.com/xxtg666/nonebot-plugin-discord-message-bridge/blob/main/src/nonebot_plugin_discord_message_bridge/config.py) 的内容进行修改
+请在机器人目录中创建一个 `.env` 文件（或编辑对应 `.env` 文件，可能为 `.env.dev` 或 `.env.prod`），并参考 [🔗config.py](https://github.com/xxtg666/nonebot-plugin-discord-message-bridge/blob/main/src/nonebot_plugin_discord_message_bridge/config.py) 的内容进行修改
 
 - 需要 [🔗创建一个 Discord Bot](https://discord.com/developers/applications) 并邀请进入服务器中，用于接收消息
 - 需要在 Discord 的 「服务器设置 → 整合」 内为需要转发的频道创建一个 Webhook ，并填入配置文件中，用于发送 QQ 内的消息
