@@ -57,14 +57,8 @@ class Config(BaseModel):
     # 合并转发消息回复占位符
     dmb_forward_msg_placeholder: str = "[合并转发]"
     
-    # 转发消息上传服务器
-    dmb_forward_msg_upload_server: str = ""
-    
-    # 转发消息预览地址
-    dmb_forward_msg_preview_url: str = ""
-    
-    # 转发消息预览命令
-    dmb_forward_preview_command: str = ""
+    # 转发消息上传服务器，请部署 https://github.com/xxtg666/Forward-Message-Server 后修改为其 SERVER_URL
+    dmb_forward_msg_server: str = ""
 
 
 config = get_plugin_config(Config)
@@ -87,6 +81,4 @@ DISCORD_COMMAND_PREFIX = config.dmb_discord_command_prefix
 NO_TRACEBACK = config.dmb_no_traceback
 QQ_SEND_INTERVAL = config.dmb_qq_send_interval
 FORWARD_MSG_PLACEHOLDER = config.dmb_forward_msg_placeholder
-FORWARD_MSG_UPLOAD_SERVER = config.dmb_forward_msg_upload_server
-FORWARD_MSG_PREVIEW_URL = config.dmb_forward_msg_preview_url
-FORWARD_PREVIEW_COMMAND = config.dmb_forward_preview_command
+FORWARD_MSG_SERVER = config.dmb_forward_msg_server

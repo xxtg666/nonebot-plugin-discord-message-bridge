@@ -30,12 +30,12 @@ if not os.path.exists(forwards_config_file):
 gv.forward_config = uYaml.load(forwards_config_file)
 uLocal.load_forward_config()
 
-if FORWARD_MSG_UPLOAD_SERVER and FORWARD_MSG_PREVIEW_URL:
+if FORWARD_MSG_SERVER:
     enable_forward_msg_parse = True
 else:
     enable_forward_msg_parse = False
     logger.warning(
-        "未配置转发消息上传服务器, 将无法解析转发消息, 请在配置文件中设置 `dmb_forward_msg_upload_server` 和 `dmb_forward_msg_preview_url`"
+        "未配置转发消息上传服务器, 将无法解析转发消息, 请在配置文件中设置 `dmb_forward_msg_server`"
     )
 
 
@@ -92,7 +92,7 @@ async def _(matcher: Matcher, bot: Bot, event: GroupMessageEvent):
                         if reply.startswith("[CQ:forward") and enable_forward_msg_parse:
                             forward_msg_id = reply[15:-1].replace(",content=&", "")
                             chat_uuid = await uForward.get_forward_mapping(forward_msg_id)
-                            await matcher.finish(FORWARD_PREVIEW_COMMAND + FORWARD_MSG_PREVIEW_URL + chat_uuid)
+                            await matcher.finish(uForward.get_preview_url(chat_uuid))
 
             await matcher.finish(
                 BOT_NAME
@@ -101,6 +101,8 @@ async def _(matcher: Matcher, bot: Bot, event: GroupMessageEvent):
                 + " bind <token> - 绑定 Discord 账户\n"
                 + QQ_COMMAND_PREFIX + QQ_COMMAND_NAME
                 + " debug - 在日志中获取 message_id_records",
+                + QQ_COMMAND_PREFIX + QQ_COMMAND_NAME
+                + " preview - 获取转发消息预览（回复转发消息时使用）",
                 at_sender=True,
             )
         uid = event.get_user_id()
