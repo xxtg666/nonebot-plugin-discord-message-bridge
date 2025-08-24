@@ -30,12 +30,12 @@ if not os.path.exists(forwards_config_file):
 gv.forward_config = uYaml.load(forwards_config_file)
 uLocal.load_forward_config()
 
-if FORWARD_MSG_GET_URL and FORWARD_MSG_GET_TOKEN and FORWARD_MSG_UPLOAD_SERVER and FORWARD_MSG_PREVIEW_URL:
+if FORWARD_MSG_UPLOAD_SERVER and FORWARD_MSG_PREVIEW_URL:
     enable_forward_msg_parse = True
 else:
     enable_forward_msg_parse = False
     logger.warning(
-        "未配置转发消息获取地址与上传服务器, 将无法解析转发消息, 请在配置文件中设置 `dmb_forward_msg_get_url`, `dmb_forward_msg_get_token`, `dmb_forward_msg_upload_server` 和 `dmb_forward_msg_preview_url`"
+        "未配置转发消息上传服务器, 将无法解析转发消息, 请在配置文件中设置 `dmb_forward_msg_upload_server` 和 `dmb_forward_msg_preview_url`"
     )
 
 

@@ -54,16 +54,8 @@ class Config(BaseModel):
     # 一对多发送消息间隔
     dmb_qq_send_interval: float = 0.2
     
-    # 下方合并转发相关功能暂未开发完成，请勿使用！
-    
     # 合并转发消息回复占位符
     dmb_forward_msg_placeholder: str = "[合并转发]"
-    
-    # 获取转发消息的 HTTP SERVER (http://127.0.0.1:3000/get_forward_msg)
-    dmb_forward_msg_get_url: str = ""
-    
-    # 获取转发消息的 Token
-    dmb_forward_msg_get_token: str = ""
     
     # 转发消息上传服务器
     dmb_forward_msg_upload_server: str = ""
@@ -95,8 +87,6 @@ DISCORD_COMMAND_PREFIX = config.dmb_discord_command_prefix
 NO_TRACEBACK = config.dmb_no_traceback
 QQ_SEND_INTERVAL = config.dmb_qq_send_interval
 FORWARD_MSG_PLACEHOLDER = config.dmb_forward_msg_placeholder
-FORWARD_MSG_GET_URL = config.dmb_forward_msg_get_url
-FORWARD_MSG_GET_TOKEN = config.dmb_forward_msg_get_token
 FORWARD_MSG_UPLOAD_SERVER = config.dmb_forward_msg_upload_server
 FORWARD_MSG_PREVIEW_URL = config.dmb_forward_msg_preview_url
 FORWARD_PREVIEW_COMMAND = config.dmb_forward_preview_command

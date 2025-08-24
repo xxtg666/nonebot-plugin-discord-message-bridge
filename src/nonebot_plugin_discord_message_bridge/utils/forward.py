@@ -1,15 +1,20 @@
 from ..config import *
+from .. import global_vars as gv
 import httpx
 
 
-async def get_forward_msg(id):
-    async with httpx.AsyncClient() as client:
-        data = await client.post(
-            FORWARD_MSG_GET_URL,
-            headers={"Authorization": "Bearer "+FORWARD_MSG_GET_TOKEN},
-            data={"message_id": id}
-        )
-        return data.json()
+async def get_forward_msg(message_id):
+    """使用nonebot2的方法获取合并转发消息"""
+    try:
+        # 使用nonebot2的call_api方法获取合并转发消息
+        result = await gv.qq_bot.call_api("get_forward_msg", message_id=message_id)
+        return {
+            "status": "ok",
+            "retcode": 0,
+            "data": result
+        }
+    except Exception as e:
+        raise Exception(f"Failed to get forward message: {e}")
 
 async def upload_forward_msg(data, id):
     async with httpx.AsyncClient() as client:
