@@ -81,6 +81,7 @@ async def download_file_to_cache(file_url, filename):
 async def send_qq_file(group_id, file_url, filename):
     try:
         file_path = await download_file_to_cache(file_url, filename)
+        uLocal.record_uploaded_group_file(group_id, filename)
         await gv.qq_bot.call_api(
             "upload_group_file",
             group_id=group_id,
@@ -90,6 +91,7 @@ async def send_qq_file(group_id, file_url, filename):
         return
     except Exception:
         try:
+            uLocal.record_uploaded_group_file(group_id, filename)
             await gv.qq_bot.call_api(
                 "upload_group_file",
                 group_id=group_id,

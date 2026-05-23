@@ -181,6 +181,9 @@ async def _(matcher: Matcher, bot: Bot, event: GroupUploadNoticeEvent):
         return
     file_info = event.file
     filename = file_info.name
+    if str(event.user_id) == str(getattr(bot, "self_id", "")) or uLocal.consume_uploaded_group_file(group_id, filename):
+        logger.debug(f"Skip bridged QQ group file upload: GroupID={group_id} File={filename}")
+        return
     for fwd in uLocal.get_forwards(group_id, "qq-groups"):
         try:
             result = await bot.call_api(

@@ -4,6 +4,7 @@ import json
 import html
 import re
 import os
+import time
 from urllib.parse import urlparse
 
 from ..config import *
@@ -205,6 +206,24 @@ def record_message_id(qq_id, dc_id):
     gv.message_id_records.append((str(qq_id), str(dc_id)))
     if len(gv.message_id_records) > MAX_MESSAGE_ID_RECORD:
         gv.message_id_records.pop(0)
+
+
+def record_uploaded_group_file(group_id, filename):
+    gv.uploaded_group_files.append((str(group_id), str(filename), time.time()))
+    if len(gv.uploaded_group_files) > 100:
+        gv.uploaded_group_files.pop(0)
+
+
+def consume_uploaded_group_file(group_id, filename, ttl=120):
+    now = time.time()
+    gv.uploaded_group_files[:] = [
+        item for item in gv.uploaded_group_files if now - item[2] <= ttl
+    ]
+    for item in list(gv.uploaded_group_files):
+        if item[0] == str(group_id) and item[1] == str(filename):
+            gv.uploaded_group_files.remove(item)
+            return True
+    return False
 
 
 def get_bot_token(bot_id):

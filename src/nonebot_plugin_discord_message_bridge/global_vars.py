@@ -6,5 +6,6 @@ discord_bot_threads = []
 temp_bind_qq = {}  # qq:rid
 temp_bind_discord = {}  # rid:dis
 message_id_records = []  # (qq:dc)
+uploaded_group_files = []  # (group_id, filename, timestamp)
 forward_config = {}
 loaded_forward_config = {}

@@ -116,7 +116,7 @@ def startDiscordBot(bot_token, bot_id):
                                         atta.filename,
                                     )
                                     ms += MessageSegment.video(video_path)
-                                elif message.content:
+                                else:
                                     ms += f" [文件: {atta.filename}] "
                         if message.reference:
                             if reply_to_qq_id := uLocal.get_another_message_id(
