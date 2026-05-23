@@ -121,15 +121,13 @@ async def _(matcher: Matcher, bot: Bot, event: GroupMessageEvent):
             await uSend.send_message(msg[2:], fwd)
             return
         msg_nocq = copy.deepcopy(msg)
-        attachments = uLocal.get_message_attachments(message)
-        for attachment in attachments:
-            if attachment["type"] in {"image", "mface"}:
-                placeholder = IMAGE_PLACEHOLDER
-            elif attachment["is_video"]:
-                placeholder = " [视频] "
+        attachments = []
+        for attachment in uLocal.get_message_attachments(message):
+            if attachment["type"] in {"file", "video"}:
+                msg_nocq = msg_nocq.replace(attachment["placeholder"], "")
             else:
-                placeholder = f" [文件: {attachment['filename']}] "
-            msg_nocq = msg_nocq.replace(attachment["placeholder"], placeholder)
+                attachments.append(attachment)
+                msg_nocq = msg_nocq.replace(attachment["placeholder"], IMAGE_PLACEHOLDER)
         if event.reply:
             if reply_to_dc_id := uLocal.get_another_message_id(
                 event.reply.message_id, "qq"
@@ -147,6 +145,8 @@ async def _(matcher: Matcher, bot: Bot, event: GroupMessageEvent):
                     f"> {uLocal.generate_message_link(reply_to_dc_id, fwd)}\n> *{msg_content}*\n"
                     + msg_nocq
                 )
+        if not msg_nocq.strip() and not attachments:
+            return
         msg_id = await uSend.webhook_send_message(
             event.sender.nickname + SUFFIX, uLocal.get_qq_avatar_url(uid), msg_nocq, fwd, attachments
         )

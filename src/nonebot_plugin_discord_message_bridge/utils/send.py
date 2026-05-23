@@ -1,6 +1,9 @@
 from nonebot import logger
 import httpx
 import mimetypes
+import os
+import tempfile
+import uuid
 
 from .. import global_vars as gv
 from . import local as uLocal
@@ -57,17 +60,31 @@ async def send_message_with_files(file_paths, name, content, fwd):
         )
 
 
+def _safe_filename(filename):
+    filename = os.path.basename(filename) or "file"
+    return "".join(ch if ch not in '<>:"/\\|?*' else "_" for ch in filename)
+
+
+async def download_file_to_cache(file_url, filename):
+    cache_dir = os.path.join(tempfile.gettempdir(), "discord_message_bridge")
+    os.makedirs(cache_dir, exist_ok=True)
+    safe_name = _safe_filename(filename)
+    file_path = os.path.abspath(os.path.join(cache_dir, f"{uuid.uuid4().hex}_{safe_name}"))
+    async with httpx.AsyncClient(follow_redirects=True) as client:
+        response = await client.get(file_url)
+        response.raise_for_status()
+    with open(file_path, "wb") as file:
+        file.write(response.content)
+    return file_path
+
+
 async def send_qq_file(group_id, file_url, filename):
     try:
-        result = await gv.qq_bot.call_api(
-            "download_file",
-            url=file_url,
-            thread_count=2,
-        )
+        file_path = await download_file_to_cache(file_url, filename)
         await gv.qq_bot.call_api(
             "upload_group_file",
             group_id=group_id,
-            file=result["file"],
+            file=file_path,
             name=filename,
         )
         return
