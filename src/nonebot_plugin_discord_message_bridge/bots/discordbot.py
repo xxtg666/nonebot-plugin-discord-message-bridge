@@ -104,9 +104,15 @@ def startDiscordBot(bot_token, bot_id):
                     async with (message.channel.typing() if not fwd["silent"] else uLocal.NoneAsyncWith()):
                         if message.attachments:
                             for atta in message.attachments:
-                                ms += MessageSegment.image(
-                                    await uDownload.download_image(atta.url)
-                                )
+                                content_type = atta.content_type or ""
+                                if uLocal.is_image_file(atta.filename, atta.url, content_type):
+                                    ms += MessageSegment.image(
+                                        await uDownload.download_image(atta.url)
+                                    )
+                                elif uLocal.is_video_file(atta.filename, atta.url, content_type):
+                                    ms += MessageSegment.video(atta.url)
+                                else:
+                                    ms += f" [文件: {atta.filename}] "
                         if message.reference:
                             if reply_to_qq_id := uLocal.get_another_message_id(
                                 message.reference.message_id, "dc"
@@ -115,6 +121,16 @@ def startDiscordBot(bot_token, bot_id):
                         msg_id = (
                             await gv.qq_bot.send_group_msg(group_id=uLocal.get_qq_group_id(fwd['qq-group']), message=ms)
                         )["message_id"]
+                        if message.attachments:
+                            for atta in message.attachments:
+                                content_type = atta.content_type or ""
+                                if uLocal.is_image_file(atta.filename, atta.url, content_type) or uLocal.is_video_file(atta.filename, atta.url, content_type):
+                                    continue
+                                await uSend.send_qq_file(
+                                    uLocal.get_qq_group_id(fwd["qq-group"]),
+                                    atta.url,
+                                    atta.filename,
+                                )
                         uLocal.record_message_id(msg_id, message.id)
                 except:
                     if not fwd["silent"] and not NO_TRACEBACK:

@@ -4,6 +4,7 @@ import json
 import html
 import re
 import os
+from urllib.parse import urlparse
 
 from ..config import *
 from .. import global_vars as gv
@@ -36,11 +37,118 @@ def get_url(string):
     return url
 
 
+def _parse_cq_params(params):
+    result = {}
+    for item in params.split(","):
+        if "=" not in item:
+            continue
+        key, value = item.split("=", 1)
+        result[key] = process_text(value)
+    return result
+
+
+def _get_attachment_url(params):
+    url = params.get("url")
+    if url:
+        return url
+    file = params.get("file", "")
+    if file.startswith(("http://", "https://")):
+        return file
+    return ""
+
+
+def _get_filename(params, url, cq_type):
+    filename = (
+        params.get("name")
+        or params.get("file_name")
+        or os.path.basename(urlparse(url).path)
+    )
+    return filename or cq_type
+
+
+def _build_attachment(cq_type, params, placeholder):
+    url = _get_attachment_url(params)
+    if not url:
+        return None
+    filename = _get_filename(params, url, cq_type)
+    return {
+        "type": cq_type,
+        "url": url,
+        "filename": filename,
+        "placeholder": placeholder,
+        "is_video": cq_type == "video" or is_video_file(filename, url),
+    }
+
+
+def get_cq_attachments(string):
+    attachments = []
+    for match in re.finditer(r"\[CQ:(?P<type>[a-zA-Z0-9_-]+)(?P<params>(?:,[^\]]*)?)\]", string):
+        cq_type = match.group("type")
+        if cq_type not in {"image", "mface", "file", "video"}:
+            continue
+        params = _parse_cq_params(match.group("params").lstrip(","))
+        attachment = _build_attachment(cq_type, params, match.group(0))
+        if attachment:
+            attachments.append(attachment)
+    return attachments
+
+
+def get_message_attachments(message):
+    attachments = []
+    for segment in message:
+        cq_type = getattr(segment, "type", "")
+        if cq_type not in {"image", "mface", "file", "video"}:
+            continue
+        params = getattr(segment, "data", {}) or {}
+        attachment = _build_attachment(cq_type, params, str(segment))
+        if attachment:
+            attachments.append(attachment)
+    return attachments
+
+
 def get_cq_images(string):
     cq_images = re.findall(r"\[CQ:image.*?\d+\]", string) + re.findall(
         r"\[CQ:mface.*?\]", string
     )
     return cq_images
+
+
+def is_video_file(filename="", url="", content_type=""):
+    if content_type and content_type.split(";", 1)[0].lower().startswith("video/"):
+        return True
+    target = (filename or url or "").split("?", 1)[0].lower()
+    return target.endswith(
+        (
+            ".mp4",
+            ".mov",
+            ".m4v",
+            ".webm",
+            ".mkv",
+            ".avi",
+            ".flv",
+            ".wmv",
+            ".mpeg",
+            ".mpg",
+        )
+    )
+
+
+def is_image_file(filename="", url="", content_type=""):
+    if content_type and content_type.split(";", 1)[0].lower().startswith("image/"):
+        return True
+    target = (filename or url or "").split("?", 1)[0].lower()
+    return target.endswith(
+        (
+            ".jpg",
+            ".jpeg",
+            ".png",
+            ".gif",
+            ".webp",
+            ".bmp",
+            ".tif",
+            ".tiff",
+        )
+    )
 
 
 def replace_cq_at_with_ids(msg):

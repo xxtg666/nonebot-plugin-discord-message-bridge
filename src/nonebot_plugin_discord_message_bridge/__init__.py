@@ -2,7 +2,7 @@ import nonebot
 from nonebot import logger
 from nonebot.matcher import Matcher
 from nonebot.adapters.onebot.v11 import Bot, GroupMessageEvent
-from nonebot.adapters.onebot.v11.event import GroupRecallNoticeEvent
+from nonebot.adapters.onebot.v11.event import GroupRecallNoticeEvent, GroupUploadNoticeEvent
 import threading
 import httpx
 import copy
@@ -121,9 +121,15 @@ async def _(matcher: Matcher, bot: Bot, event: GroupMessageEvent):
             await uSend.send_message(msg[2:], fwd)
             return
         msg_nocq = copy.deepcopy(msg)
-        images = uLocal.get_url(msg)
-        for i in uLocal.get_cq_images(msg):
-            msg_nocq = msg_nocq.replace(i, IMAGE_PLACEHOLDER)
+        attachments = uLocal.get_message_attachments(message)
+        for attachment in attachments:
+            if attachment["type"] in {"image", "mface"}:
+                placeholder = IMAGE_PLACEHOLDER
+            elif attachment["is_video"]:
+                placeholder = " [视频] "
+            else:
+                placeholder = f" [文件: {attachment['filename']}] "
+            msg_nocq = msg_nocq.replace(attachment["placeholder"], placeholder)
         if event.reply:
             if reply_to_dc_id := uLocal.get_another_message_id(
                 event.reply.message_id, "qq"
@@ -142,7 +148,7 @@ async def _(matcher: Matcher, bot: Bot, event: GroupMessageEvent):
                     + msg_nocq
                 )
         msg_id = await uSend.webhook_send_message(
-            event.sender.nickname + SUFFIX, uLocal.get_qq_avatar_url(uid), msg_nocq, fwd, images
+            event.sender.nickname + SUFFIX, uLocal.get_qq_avatar_url(uid), msg_nocq, fwd, attachments
         )
         uLocal.record_message_id(event.message_id, msg_id)
 
@@ -165,6 +171,46 @@ async def _(matcher: Matcher, bot: Bot, event: GroupRecallNoticeEvent):
                         + "||"
                     },
                 )
+
+
+@nonebot.on_notice().handle()
+async def _(matcher: Matcher, bot: Bot, event: GroupUploadNoticeEvent):
+    try:
+        group_id = event.group_id
+    except Exception:
+        return
+    file_info = event.file
+    filename = file_info.name
+    for fwd in uLocal.get_forwards(group_id, "qq-groups"):
+        try:
+            result = await bot.call_api(
+                "get_group_file_url",
+                group_id=group_id,
+                file_id=file_info.id,
+                busid=file_info.busid,
+            )
+            file_url = result["url"]
+        except Exception:
+            logger.exception(f"Failed to get QQ group file url: {filename}")
+            continue
+        content = " [视频] " if uLocal.is_video_file(filename, file_url) else f" [文件: {filename}] "
+        sender = getattr(event, "sender", None)
+        msg_id = await uSend.webhook_send_message(
+            str(getattr(sender, "nickname", event.user_id)) + SUFFIX,
+            uLocal.get_qq_avatar_url(event.user_id),
+            content,
+            fwd,
+            [
+                {
+                    "type": "video" if uLocal.is_video_file(filename, file_url) else "file",
+                    "url": file_url,
+                    "filename": filename,
+                    "placeholder": "",
+                    "is_video": uLocal.is_video_file(filename, file_url),
+                }
+            ],
+        )
+        uLocal.record_message_id(event.file.id, msg_id)
 
 
 @nonebot.on_message().handle()
