@@ -62,8 +62,10 @@ def _get_filename(params, url, cq_type):
     filename = (
         params.get("name")
         or params.get("file_name")
+        or params.get("file")
         or os.path.basename(urlparse(url).path)
     )
+    filename = os.path.basename(str(filename))
     return filename or cq_type
 
 
@@ -105,6 +107,32 @@ def get_message_attachments(message):
         if attachment:
             attachments.append(attachment)
     return attachments
+
+
+def render_message_for_discord(message):
+    text = ""
+    attachments = []
+    for segment in message:
+        cq_type = getattr(segment, "type", "")
+        data = getattr(segment, "data", {}) or {}
+        if cq_type == "text":
+            text += process_text(data.get("text", ""))
+            continue
+        if cq_type == "at":
+            qq = str(data.get("qq", ""))
+            dis_id = get_qq_bind_discord(qq)
+            text += f"<@{dis_id}>" if dis_id else str(segment)
+            continue
+        if cq_type in {"image", "mface"}:
+            attachment = _build_attachment(cq_type, data, str(segment))
+            if attachment:
+                attachments.append(attachment)
+                text += IMAGE_PLACEHOLDER
+            continue
+        if cq_type in {"file", "video"}:
+            continue
+        text += process_text(str(segment))
+    return text, attachments
 
 
 def get_cq_images(string):

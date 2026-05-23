@@ -116,18 +116,14 @@ async def _(matcher: Matcher, bot: Bot, event: GroupMessageEvent):
             origin_message = f"[{FORWARD_MSG_PLACEHOLDER}]({preview_url})"
         else:
             origin_message = uLocal.process_text(origin_message)
-        msg = uLocal.replace_cq_at_with_ids(origin_message)
+        msg, attachments = uLocal.render_message_for_discord(message)
+        if origin_message.startswith(f"[{FORWARD_MSG_PLACEHOLDER}]("):
+            msg = origin_message
+            attachments = []
         if msg.startswith(DISCORD_COMMAND_PREFIX * 4):
             await uSend.send_message(msg[2:], fwd)
             return
         msg_nocq = copy.deepcopy(msg)
-        attachments = []
-        for attachment in uLocal.get_message_attachments(message):
-            if attachment["type"] in {"file", "video"}:
-                msg_nocq = msg_nocq.replace(attachment["placeholder"], "")
-            else:
-                attachments.append(attachment)
-                msg_nocq = msg_nocq.replace(attachment["placeholder"], IMAGE_PLACEHOLDER)
         if event.reply:
             if reply_to_dc_id := uLocal.get_another_message_id(
                 event.reply.message_id, "qq"

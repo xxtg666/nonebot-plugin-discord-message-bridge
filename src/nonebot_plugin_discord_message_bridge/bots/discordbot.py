@@ -10,7 +10,6 @@ from .. import global_vars as gv
 from ..config import *
 from ..utils import send as uSend
 from ..utils import local as uLocal
-from ..utils import download as uDownload
 
 
 intents = discord.Intents.default()
@@ -107,9 +106,11 @@ def startDiscordBot(bot_token, bot_id):
                             for atta in message.attachments:
                                 content_type = atta.content_type or ""
                                 if uLocal.is_image_file(atta.filename, atta.url, content_type):
-                                    ms += MessageSegment.image(
-                                        await uDownload.download_image(atta.url)
+                                    image_path = await uSend.download_file_to_cache(
+                                        atta.url,
+                                        atta.filename,
                                     )
+                                    ms += MessageSegment.image(image_path)
                                 elif uLocal.is_video_file(atta.filename, atta.url, content_type):
                                     video_path = await uSend.download_file_to_cache(
                                         atta.url,
