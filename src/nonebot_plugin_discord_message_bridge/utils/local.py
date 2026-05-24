@@ -79,6 +79,7 @@ def _build_attachment(cq_type, params, placeholder):
         "url": url,
         "filename": filename,
         "placeholder": placeholder,
+        "size": params.get("size"),
         "is_video": cq_type == "video" or is_video_file(filename, url),
     }
 
@@ -178,6 +179,19 @@ def is_image_file(filename="", url="", content_type=""):
             ".tiff",
         )
     )
+
+
+def format_file_size(size):
+    try:
+        size = int(size)
+    except (TypeError, ValueError):
+        return "未知大小"
+    units = ("B", "KiB", "MiB", "GiB")
+    value = float(size)
+    for unit in units:
+        if value < 1024 or unit == units[-1]:
+            return f"{value:.1f} {unit}" if unit != "B" else f"{int(value)} {unit}"
+        value /= 1024
 
 
 def replace_cq_at_with_ids(msg):

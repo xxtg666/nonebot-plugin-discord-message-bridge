@@ -60,6 +60,9 @@ class Config(BaseModel):
     # 转发消息上传服务器，请部署 https://github.com/xxtg666/Forward-Message-Server 后修改为其 SERVER_URL
     dmb_forward_msg_server: str = ""
 
+    # Discord 附件上传大小限制（字节），超过后只发送文件信息，不上传附件
+    dmb_discord_upload_limit: int = 10 * 1024 * 1024
+
 
 config = get_plugin_config(Config)
 
@@ -82,3 +85,4 @@ NO_TRACEBACK = config.dmb_no_traceback
 QQ_SEND_INTERVAL = config.dmb_qq_send_interval
 FORWARD_MSG_PLACEHOLDER = config.dmb_forward_msg_placeholder
 FORWARD_MSG_SERVER = config.dmb_forward_msg_server
+DISCORD_UPLOAD_LIMIT = config.dmb_discord_upload_limit

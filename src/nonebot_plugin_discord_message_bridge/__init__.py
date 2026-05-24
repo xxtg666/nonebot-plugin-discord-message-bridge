@@ -205,6 +205,7 @@ async def _(matcher: Matcher, bot: Bot, event: GroupUploadNoticeEvent):
                     "url": file_url,
                     "filename": filename,
                     "placeholder": "",
+                    "size": file_info.size,
                     "is_video": uLocal.is_video_file(filename, file_url),
                 }
             ],

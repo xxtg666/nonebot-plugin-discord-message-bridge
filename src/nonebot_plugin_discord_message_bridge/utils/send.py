@@ -6,7 +6,15 @@ import tempfile
 import uuid
 
 from .. import global_vars as gv
+from ..config import DISCORD_UPLOAD_LIMIT
 from . import local as uLocal
+
+
+def _to_int(value):
+    try:
+        return int(value)
+    except (TypeError, ValueError):
+        return None
 
 
 async def webhook_send_message(username, avatar_url, content, fwd, attachments=None):
@@ -14,8 +22,31 @@ async def webhook_send_message(username, avatar_url, content, fwd, attachments=N
         attachments = []
     async with httpx.AsyncClient() as client:
         files = []
+        skipped = []
         for idx, attachment in enumerate(attachments):
+            size = _to_int(attachment.get("size"))
+            if size is not None and size > DISCORD_UPLOAD_LIMIT:
+                skipped.append(attachment)
+                continue
+            try:
+                head = await client.head(attachment["url"], follow_redirects=True)
+                content_length = _to_int(head.headers.get("content-length"))
+                if content_length is not None and content_length > DISCORD_UPLOAD_LIMIT:
+                    attachment["size"] = content_length
+                    skipped.append(attachment)
+                    continue
+            except Exception:
+                pass
             resp = await client.get(attachment["url"])
+            content_length = _to_int(resp.headers.get("content-length"))
+            if content_length is not None and content_length > DISCORD_UPLOAD_LIMIT:
+                attachment["size"] = content_length
+                skipped.append(attachment)
+                continue
+            if len(resp.content) > DISCORD_UPLOAD_LIMIT:
+                attachment["size"] = len(resp.content)
+                skipped.append(attachment)
+                continue
             content_type = (
                 resp.headers.get("content-type")
                 or mimetypes.guess_type(attachment["filename"])[0]
@@ -31,6 +62,12 @@ async def webhook_send_message(username, avatar_url, content, fwd, attachments=N
                     ),
                 )
             )
+        if skipped:
+            skipped_text = "\n".join(
+                f"[文件过大未上传] {attachment['filename']} ({uLocal.format_file_size(attachment.get('size'))}): {attachment['url']}"
+                for attachment in skipped
+            )
+            content = (content + "\n" + skipped_text).strip()
         resp = await client.post(
             url=uLocal.get_discord_channel(fwd["discord-channel"])["webhook-url"] + "?wait=true",
             data={"username": username, "avatar_url": avatar_url, "content": content},
