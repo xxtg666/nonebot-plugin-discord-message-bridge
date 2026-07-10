@@ -1,7 +1,7 @@
 [project]
 name = "nonebot-plugin-discord-message-bridge"
 
-version = "1.4.1.4"
+version = "1.4.1.5"
 
 description = "Discord - QQ 消息转发插件"
 authors = [
@@ -12,7 +12,8 @@ dependencies = [
     "nonebot-adapter-onebot",
     "discord-py",
     "nonebot2[fastapi]",
-    "httpx"
+    "httpx",
+    "PyYAML"
 ]
 requires-python = ">=3.9"
 readme = "README.md"

@@ -29,7 +29,10 @@ class Config(BaseModel):
     
     # 转发图片占位符
     dmb_image_placeholder: str = " [图片] "
-    
+
+    # 转发视频占位符
+    dmb_video_placeholder: str = " [视频] "
+
     # 编辑消息占位符
     dmb_edit_placeholder: str = "[编辑消息] "
     
@@ -75,6 +78,7 @@ MAX_MESSAGE_ID_RECORD = config.dmb_max_message_id_record
 PREFIX = config.dmb_prefix
 SUFFIX = config.dmb_suffix
 IMAGE_PLACEHOLDER = config.dmb_image_placeholder
+VIDEO_PLACEHOLDER = config.dmb_video_placeholder
 EDIT_PLACEHOLDER = config.dmb_edit_placeholder
 DELETE_PLACEHOLDER = config.dmb_delete_placeholder
 BOT_NAME = config.dmb_bot_name

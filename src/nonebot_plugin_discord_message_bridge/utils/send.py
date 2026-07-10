@@ -1,5 +1,6 @@
 from nonebot import logger
 import httpx
+import json
 import mimetypes
 import os
 import tempfile
@@ -10,6 +11,9 @@ from ..config import DISCORD_UPLOAD_LIMIT
 from . import local as uLocal
 
 
+DOWNLOAD_CHUNK_SIZE = 64 * 1024
+
+
 def _to_int(value):
     try:
         return int(value)
@@ -17,64 +21,130 @@ def _to_int(value):
         return None
 
 
-async def webhook_send_message(username, avatar_url, content, fwd, attachments=None):
+def _normalize_webhook_username(username):
+    username = str(username).strip() or "QQ"
+    return username[:80]
+
+
+def _append_status_lines(content, lines):
+    if not lines:
+        return content
+    return (content + "\n" + "\n".join(lines)).strip()
+
+
+async def _download_attachment(client, attachment):
+    async with client.stream(
+        "GET", attachment["url"], follow_redirects=True
+    ) as response:
+        response.raise_for_status()
+        content_length = _to_int(response.headers.get("content-length"))
+        if content_length is not None and content_length > DISCORD_UPLOAD_LIMIT:
+            return None, content_length, response.headers.get("content-type")
+
+        content = bytearray()
+        async for chunk in response.aiter_bytes(DOWNLOAD_CHUNK_SIZE):
+            content.extend(chunk)
+            if len(content) > DISCORD_UPLOAD_LIMIT:
+                return None, len(content), response.headers.get("content-type")
+        return bytes(content), len(content), response.headers.get("content-type")
+
+
+async def webhook_send_message(
+    username,
+    avatar_url,
+    content,
+    fwd,
+    attachments=None,
+):
     if attachments is None:
         attachments = []
-    async with httpx.AsyncClient() as client:
+    async with httpx.AsyncClient(follow_redirects=True) as client:
         files = []
         skipped = []
-        for idx, attachment in enumerate(attachments):
+        failed = []
+        for attachment in attachments:
             size = _to_int(attachment.get("size"))
             if size is not None and size > DISCORD_UPLOAD_LIMIT:
-                skipped.append(attachment)
+                skipped.append((attachment, "文件过大未上传"))
                 continue
             try:
-                head = await client.head(attachment["url"], follow_redirects=True)
-                content_length = _to_int(head.headers.get("content-length"))
-                if content_length is not None and content_length > DISCORD_UPLOAD_LIMIT:
-                    attachment["size"] = content_length
-                    skipped.append(attachment)
-                    continue
-            except Exception:
-                pass
-            resp = await client.get(attachment["url"])
-            content_length = _to_int(resp.headers.get("content-length"))
-            if content_length is not None and content_length > DISCORD_UPLOAD_LIMIT:
-                attachment["size"] = content_length
-                skipped.append(attachment)
+                file_content, downloaded_size, response_content_type = (
+                    await _download_attachment(client, attachment)
+                )
+            except Exception as exception:
+                logger.warning(
+                    "Failed to download attachment "
+                    f"{attachment.get('filename', 'file')}: {type(exception).__name__}"
+                )
+                failed.append(attachment)
                 continue
-            if len(resp.content) > DISCORD_UPLOAD_LIMIT:
-                attachment["size"] = len(resp.content)
-                skipped.append(attachment)
+            attachment["size"] = downloaded_size
+            if file_content is None:
+                skipped.append((attachment, "文件过大未上传"))
                 continue
             content_type = (
-                resp.headers.get("content-type")
+                response_content_type
                 or mimetypes.guess_type(attachment["filename"])[0]
                 or "application/octet-stream"
             )
+            filename = _safe_filename(attachment.get("filename", "file"))
             files.append(
                 (
-                    f"file[{idx+1}]",
+                    f"files[{len(files)}]",
                     (
-                        attachment["filename"],
-                        resp.content,
+                        filename,
+                        file_content,
                         content_type,
                     ),
                 )
             )
         if skipped:
             skipped_text = "\n".join(
-                f"[文件过大未上传] {attachment['filename']} ({uLocal.format_file_size(attachment.get('size'))}): {attachment['url']}"
-                for attachment in skipped
+                f"[{reason}] {attachment['filename']} ({uLocal.format_file_size(attachment.get('size'))}): {attachment['url']}"
+                for attachment, reason in skipped
             )
-            content = (content + "\n" + skipped_text).strip()
-        resp = await client.post(
-            url=uLocal.get_discord_channel(fwd["discord-channel"])["webhook-url"] + "?wait=true",
-            data={"username": username, "avatar_url": avatar_url, "content": content},
-            files=files,
+            content = _append_status_lines(content, [skipped_text])
+        if failed:
+            failed_text = "\n".join(
+                f"[附件下载失败] {attachment['filename']}: {attachment['url']}"
+                for attachment in failed
+            )
+            content = _append_status_lines(content, [failed_text])
+        payload = {
+            "username": _normalize_webhook_username(username),
+            "avatar_url": avatar_url,
+            "content": content,
+        }
+        webhook_url = uLocal.get_discord_channel(fwd["discord-channel"])[
+            "webhook-url"
+        ]
+        webhook_url = str(
+            httpx.URL(webhook_url).copy_merge_params({"wait": "true"})
         )
-        logger.debug("server response: " + str(resp.json()))
-        return resp.json()["id"]
+        try:
+            if files:
+                resp = await client.post(
+                    url=webhook_url,
+                    data={"payload_json": json.dumps(payload, ensure_ascii=False)},
+                    files=files,
+                )
+            else:
+                resp = await client.post(url=webhook_url, json=payload)
+            resp.raise_for_status()
+        except httpx.HTTPStatusError as exception:
+            status_code = exception.response.status_code
+            raise RuntimeError(
+                f"Discord webhook returned HTTP {status_code}"
+            ) from None
+        except httpx.RequestError as exception:
+            raise RuntimeError(
+                f"Discord webhook request failed: {type(exception).__name__}"
+            ) from None
+        response_data = resp.json()
+        logger.debug(
+            f"Discord webhook message sent: MessageID={response_data.get('id')}"
+        )
+        return response_data["id"]
 
 
 async def send_message_with_files(file_paths, name, content, fwd):
@@ -107,50 +177,40 @@ async def download_file_to_cache(file_url, filename):
     os.makedirs(cache_dir, exist_ok=True)
     safe_name = _safe_filename(filename)
     file_path = os.path.abspath(os.path.join(cache_dir, f"{uuid.uuid4().hex}_{safe_name}"))
-    async with httpx.AsyncClient(follow_redirects=True) as client:
-        response = await client.get(file_url)
-        response.raise_for_status()
-    with open(file_path, "wb") as file:
-        file.write(response.content)
+    completed = False
+    try:
+        async with httpx.AsyncClient(follow_redirects=True) as client:
+            async with client.stream("GET", file_url) as response:
+                response.raise_for_status()
+                with open(file_path, "wb") as file:
+                    async for chunk in response.aiter_bytes(DOWNLOAD_CHUNK_SIZE):
+                        file.write(chunk)
+        completed = True
+    finally:
+        if not completed:
+            remove_cached_file(file_path)
     return file_path
 
 
-async def send_qq_file(group_id, file_url, filename):
-    try:
-        file_path = await download_file_to_cache(file_url, filename)
-        uLocal.record_uploaded_group_file(group_id, filename)
-        await gv.qq_bot.call_api(
-            "upload_group_file",
-            group_id=group_id,
-            file=file_path,
-            name=filename,
-        )
+def remove_cached_file(file_path):
+    if not file_path:
         return
-    except Exception:
-        try:
-            uLocal.record_uploaded_group_file(group_id, filename)
-            await gv.qq_bot.call_api(
-                "upload_group_file",
-                group_id=group_id,
-                file=file_url,
-                name=filename,
-            )
-            return
-        except Exception:
-            pass
-        await gv.qq_bot.send_group_msg(
-            group_id=group_id,
-            message=f"{'[视频]' if uLocal.is_video_file(filename, file_url) else '[文件]'} {filename}: {file_url}",
-        )
+    try:
+        os.remove(file_path)
+    except FileNotFoundError:
+        pass
+    except OSError as exception:
+        logger.warning(f"Failed to remove attachment cache {file_path}: {exception}")
 
 
 async def send_message(content, fwd):
     async with httpx.AsyncClient() as client:
-        await client.post(
+        response = await client.post(
             url=f"https://discord.com/api/channels/{uLocal.get_discord_channel(fwd['discord-channel'])['channel-id']}/messages",
             headers={"Authorization": f"Bot {uLocal.get_bot_token(uLocal.get_discord_channel(fwd['discord-channel'])['bot'])}", "User-Agent": "DiscordBot"},
             data={"content": content},
         )
+        response.raise_for_status()
 
 
 async def send_list_message(content_list, fwd):

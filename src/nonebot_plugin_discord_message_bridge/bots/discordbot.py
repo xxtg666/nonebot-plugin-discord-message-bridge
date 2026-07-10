@@ -16,6 +16,122 @@ intents = discord.Intents.default()
 intents.message_content = True
 
 
+async def _send_discord_attachment_to_qq(group_id, attachment, is_video):
+    file_path = None
+    try:
+        file_path = await uSend.download_file_to_cache(
+            attachment.url,
+            attachment.filename,
+        )
+        if is_video:
+            try:
+                await gv.qq_bot.send_group_msg(
+                    group_id=group_id,
+                    message=Message(MessageSegment.video(file_path)),
+                )
+                return True
+            except Exception as exception:
+                logger.warning(
+                    "Failed to send Discord video as a QQ video, falling back "
+                    f"to a group file: {type(exception).__name__}"
+                )
+
+        await gv.qq_bot.call_api(
+            "upload_group_file",
+            group_id=group_id,
+            file=file_path,
+            name=attachment.filename,
+        )
+        return True
+    except Exception as exception:
+        media_type = "视频" if is_video else "文件"
+        logger.warning(
+            f"Failed to forward Discord {media_type} {attachment.filename}: "
+            f"{type(exception).__name__}"
+        )
+        try:
+            await gv.qq_bot.send_group_msg(
+                group_id=group_id,
+                message=Message(
+                    MessageSegment.text(
+                        f"[{media_type}转发失败] {attachment.filename}"
+                    )
+                ),
+            )
+        except Exception:
+            logger.exception(
+                f"Failed to send QQ attachment failure notice: {attachment.filename}"
+            )
+        return False
+    finally:
+        uSend.remove_cached_file(file_path)
+
+
+async def forward_discord_message_to_qq(message, fwd):
+    qq_group_id = uLocal.get_qq_group_id(fwd["qq-group"])
+    ms = Message(
+        MessageSegment.text(fwd["discord-prefix"] + f"<{message.author.name}> ")
+    )
+    ms += uLocal.render_discord_text_for_qq(message.content)
+    deferred_attachments = []
+    cached_image_paths = []
+
+    try:
+        for attachment in message.attachments:
+            content_type = attachment.content_type or ""
+            if uLocal.is_image_file(
+                attachment.filename, attachment.url, content_type
+            ):
+                try:
+                    image_path = await uSend.download_file_to_cache(
+                        attachment.url,
+                        attachment.filename,
+                    )
+                    cached_image_paths.append(image_path)
+                    ms += MessageSegment.image(image_path)
+                except Exception as exception:
+                    logger.warning(
+                        "Failed to download Discord image "
+                        f"{attachment.filename}: {type(exception).__name__}"
+                    )
+                    ms += MessageSegment.text(
+                        f" [图片转发失败: {attachment.filename}] "
+                    )
+            elif uLocal.is_video_file(
+                attachment.filename, attachment.url, content_type
+            ):
+                ms += MessageSegment.text(VIDEO_PLACEHOLDER)
+                deferred_attachments.append(("video", attachment))
+            else:
+                ms += MessageSegment.text(f" [文件: {attachment.filename}] ")
+                deferred_attachments.append(("file", attachment))
+
+        if message.reference:
+            if reply_to_qq_id := uLocal.get_another_message_id(
+                message.reference.message_id, "dc"
+            ):
+                ms = MessageSegment.reply(int(reply_to_qq_id)) + ms
+
+        result = await gv.qq_bot.send_group_msg(
+            group_id=qq_group_id,
+            message=ms,
+        )
+    finally:
+        for image_path in cached_image_paths:
+            uSend.remove_cached_file(image_path)
+
+    msg_id = result["message_id"]
+    uLocal.record_message_id(msg_id, message.id)
+
+    for attachment_type, attachment in deferred_attachments:
+        await _send_discord_attachment_to_qq(
+            qq_group_id,
+            attachment,
+            attachment_type == "video",
+        )
+    return msg_id
+
+
 def process_bind_command(discord_id, command, fwd):
     discord_id = str(discord_id)
     command = command.replace(DISCORD_COMMAND_PREFIX, "", 1)
@@ -94,53 +210,9 @@ def startDiscordBot(bot_token, bot_id):
                         process_bind_command(message.author.id, message.content, fwd), fwd
                     )
                     return
-                ms = Message(
-                    uLocal.replace_ids_with_cq_at(
-                        fwd["discord-prefix"] + f"<{message.author.name}> {message.content}"
-                    )
-                )
                 try:
                     async with (message.channel.typing() if not fwd["silent"] else uLocal.NoneAsyncWith()):
-                        qq_group_id = uLocal.get_qq_group_id(fwd["qq-group"])
-                        if message.attachments:
-                            for atta in message.attachments:
-                                content_type = atta.content_type or ""
-                                if uLocal.is_image_file(atta.filename, atta.url, content_type):
-                                    image_path = await uSend.download_file_to_cache(
-                                        atta.url,
-                                        atta.filename,
-                                    )
-                                    ms += MessageSegment.image(image_path)
-                                elif uLocal.is_video_file(atta.filename, atta.url, content_type):
-                                    video_path = await uSend.download_file_to_cache(
-                                        atta.url,
-                                        atta.filename,
-                                    )
-                                    ms += MessageSegment.video(video_path)
-                                else:
-                                    ms += f" [文件: {atta.filename}] "
-                        if message.reference:
-                            if reply_to_qq_id := uLocal.get_another_message_id(
-                                message.reference.message_id, "dc"
-                            ):
-                                ms = MessageSegment.reply(int(reply_to_qq_id)) + ms
-                        msg_id = None
-                        if str(ms).strip():
-                            msg_id = (
-                                await gv.qq_bot.send_group_msg(group_id=qq_group_id, message=ms)
-                            )["message_id"]
-                        if message.attachments:
-                            for atta in message.attachments:
-                                content_type = atta.content_type or ""
-                                if uLocal.is_image_file(atta.filename, atta.url, content_type) or uLocal.is_video_file(atta.filename, atta.url, content_type):
-                                    continue
-                                await uSend.send_qq_file(
-                                    qq_group_id,
-                                    atta.url,
-                                    atta.filename,
-                                )
-                        if msg_id:
-                            uLocal.record_message_id(msg_id, message.id)
+                        await forward_discord_message_to_qq(message, fwd)
                 except:
                     if not fwd["silent"] and not NO_TRACEBACK:
                         await message.add_reaction(QQ_FORWARD_FAILED)
@@ -158,11 +230,10 @@ def startDiscordBot(bot_token, bot_id):
                     return
                 async with (before.channel.typing() if not fwd["silent"] else uLocal.NoneAsyncWith()):
                     if qq_id := uLocal.get_another_message_id(before.id, "dc"):
-                        ms = (
-                            MessageSegment.reply(int(qq_id))
-                            + EDIT_PLACEHOLDER
-                            + after.content
+                        ms = MessageSegment.reply(int(qq_id)) + MessageSegment.text(
+                            EDIT_PLACEHOLDER
                         )
+                        ms += uLocal.render_discord_text_for_qq(after.content)
                         msg_id = (
                             await gv.qq_bot.send_group_msg(group_id=uLocal.get_qq_group_id(fwd['qq-group']), message=ms)
                         )["message_id"]

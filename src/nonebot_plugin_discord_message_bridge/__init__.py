@@ -1,5 +1,6 @@
 import nonebot
 from nonebot import logger
+from nonebot.exception import FinishedException
 from nonebot.matcher import Matcher
 from nonebot.adapters.onebot.v11 import Bot, GroupMessageEvent
 from nonebot.adapters.onebot.v11.event import GroupRecallNoticeEvent, GroupUploadNoticeEvent
@@ -22,7 +23,8 @@ from .bots import discordbot as bDiscord
 os.environ["HTTP_PROXY"] = HTTP_PROXY
 os.environ["HTTPS_PROXY"] = HTTP_PROXY
 if not os.path.exists(qq_bind_file):
-    json.dump({}, uLocal.safe_open(qq_bind_file, "w"))
+    with uLocal.safe_open(qq_bind_file, "w", encoding="utf-8") as file:
+        json.dump({}, file)
 if not os.path.exists(forwards_config_file):
     uYaml.dump(uYaml.default_config_data, forwards_config_file)
     logger.warning(f"转发配置文件已生成于 ( {os.path.abspath(forwards_config_file)} ) , 请配置后重启插件.")
@@ -40,9 +42,11 @@ else:
 
 
 def set_qq_bind(discord_id, qq_id):
-    qq_bind = json.load(open(qq_bind_file, "r"))
+    with open(qq_bind_file, "r", encoding="utf-8") as file:
+        qq_bind = json.load(file)
     qq_bind[str(discord_id)] = str(qq_id)
-    json.dump(qq_bind, open(qq_bind_file, "w"))
+    with open(qq_bind_file, "w", encoding="utf-8") as file:
+        json.dump(qq_bind, file)
 
 
 @nonebot.on_message().handle()
@@ -52,8 +56,9 @@ async def _(matcher: Matcher, bot: Bot, event: GroupMessageEvent):
     except Exception:
         return
     for fwd in uLocal.get_forwards(event.group_id, "qq-groups"):
+        message_types = [segment.type for segment in event.get_message()]
         logger.debug(
-            f"Received message from QQ: Message={str(event.get_message())} UserID={event.get_user_id()} GroupID={event.group_id} MessageID={event.message_id} "
+            f"Received message from QQ: PlainText={event.get_plaintext()} SegmentTypes={message_types} UserID={event.get_user_id()} GroupID={event.group_id} MessageID={event.message_id} "
             f"ReplyMessageID={event.reply.message_id if event.reply else None} SenderNickname={event.sender.nickname}"
         )
         if event.get_plaintext().startswith(QQ_COMMAND_PREFIX + QQ_COMMAND_NAME) and not fwd["silent"]:
@@ -62,7 +67,7 @@ async def _(matcher: Matcher, bot: Bot, event: GroupMessageEvent):
                 if args[0] == "bind":
                     try:
                         token = args[1]
-                    except:
+                    except IndexError:
                         if dis_id := uLocal.get_qq_bind_discord(event.get_user_id()):
                             await matcher.finish(f"你已绑定 Discord({dis_id})", at_sender=True)
                         await matcher.finish(
@@ -143,8 +148,13 @@ async def _(matcher: Matcher, bot: Bot, event: GroupMessageEvent):
                 )
         if not msg_nocq.strip() and not attachments:
             return
+        sender_name = uLocal.get_qq_sender_name(event.sender, uid)
         msg_id = await uSend.webhook_send_message(
-            event.sender.nickname + SUFFIX, uLocal.get_qq_avatar_url(uid), msg_nocq, fwd, attachments
+            sender_name + SUFFIX,
+            uLocal.get_qq_avatar_url(uid),
+            msg_nocq,
+            fwd,
+            attachments,
         )
         uLocal.record_message_id(event.message_id, msg_id)
 
@@ -169,48 +179,77 @@ async def _(matcher: Matcher, bot: Bot, event: GroupRecallNoticeEvent):
                 )
 
 
-@nonebot.on_notice().handle()
-async def _(matcher: Matcher, bot: Bot, event: GroupUploadNoticeEvent):
+async def forward_qq_group_file_to_discord(bot: Bot, event: GroupUploadNoticeEvent):
     try:
         group_id = event.group_id
     except Exception:
         return
     file_info = event.file
     filename = file_info.name
-    if str(event.user_id) == str(getattr(bot, "self_id", "")) or uLocal.consume_uploaded_group_file(group_id, filename):
+    if str(event.user_id) == str(getattr(bot, "self_id", "")):
         logger.debug(f"Skip bridged QQ group file upload: GroupID={group_id} File={filename}")
         return
-    for fwd in uLocal.get_forwards(group_id, "qq-groups"):
-        try:
-            result = await bot.call_api(
-                "get_group_file_url",
-                group_id=group_id,
-                file_id=file_info.id,
-                busid=file_info.busid,
-            )
-            file_url = result["url"]
-        except Exception:
-            logger.exception(f"Failed to get QQ group file url: {filename}")
-            continue
-        content = " [视频] " if uLocal.is_video_file(filename, file_url) else f" [文件: {filename}] "
-        sender = getattr(event, "sender", None)
-        msg_id = await uSend.webhook_send_message(
-            str(getattr(sender, "nickname", event.user_id)) + SUFFIX,
-            uLocal.get_qq_avatar_url(event.user_id),
-            content,
-            fwd,
-            [
-                {
-                    "type": "video" if uLocal.is_video_file(filename, file_url) else "file",
-                    "url": file_url,
-                    "filename": filename,
-                    "placeholder": "",
-                    "size": file_info.size,
-                    "is_video": uLocal.is_video_file(filename, file_url),
-                }
-            ],
+
+    forwards = uLocal.get_forwards(group_id, "qq-groups")
+    if not forwards:
+        return
+
+    file_url = None
+    try:
+        result = await bot.call_api(
+            "get_group_file_url",
+            group_id=group_id,
+            file_id=file_info.id,
+            busid=file_info.busid,
         )
-        uLocal.record_message_id(event.file.id, msg_id)
+        file_url = result["url"]
+    except FinishedException:
+        raise
+    except Exception:
+        logger.exception(f"Failed to get QQ group file url: {filename}")
+
+    sender_name = await uLocal.get_group_member_name(
+        bot,
+        group_id,
+        event.user_id,
+    )
+    is_video = uLocal.is_video_file(filename, file_url)
+    if file_url:
+        content = VIDEO_PLACEHOLDER if is_video else f" [文件: {filename}] "
+        attachments = [
+            {
+                "type": "video" if is_video else "file",
+                "url": file_url,
+                "filename": filename,
+                "placeholder": "",
+                "size": file_info.size,
+                "is_video": is_video,
+            }
+        ]
+    else:
+        media_type = "视频" if is_video else "文件"
+        content = f" [{media_type}转发失败: {filename}] "
+        attachments = []
+    for fwd in forwards:
+        try:
+            await uSend.webhook_send_message(
+                sender_name + SUFFIX,
+                uLocal.get_qq_avatar_url(event.user_id),
+                content,
+                fwd,
+                attachments,
+            )
+        except FinishedException:
+            raise
+        except Exception:
+            logger.exception(
+                f"Failed to forward QQ group file to Discord: GroupID={group_id} File={filename}"
+            )
+
+
+@nonebot.on_notice().handle()
+async def _(matcher: Matcher, bot: Bot, event: GroupUploadNoticeEvent):
+    await forward_qq_group_file_to_discord(bot, event)
 
 
 @nonebot.on_message().handle()

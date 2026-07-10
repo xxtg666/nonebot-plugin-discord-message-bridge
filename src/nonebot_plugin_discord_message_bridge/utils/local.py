@@ -1,4 +1,6 @@
 from nonebot import logger
+from nonebot.adapters.onebot.v11 import Message, MessageSegment
+from nonebot.exception import FinishedException
 import random
 import json
 import html
@@ -11,12 +13,17 @@ from ..config import *
 from .. import global_vars as gv
 
 
+def _load_qq_bind():
+    with open(qq_bind_file, "r", encoding="utf-8") as file:
+        return json.load(file)
+
+
 def get_qq_bind(discord_id):
-    return json.load(open(qq_bind_file, "r")).get(str(discord_id), False)
+    return _load_qq_bind().get(str(discord_id), False)
 
 
 def get_qq_bind_discord(qq_id):
-    return {qq: dis for dis, qq in json.load(open(qq_bind_file, "r")).items()}.get(
+    return {qq: dis for dis, qq in _load_qq_bind().items()}.get(
         str(qq_id), False
     )
 
@@ -128,12 +135,32 @@ def render_message_for_discord(message):
             attachment = _build_attachment(cq_type, data, str(segment))
             if attachment:
                 attachments.append(attachment)
-                text += IMAGE_PLACEHOLDER
+            text += IMAGE_PLACEHOLDER
             continue
         if cq_type in {"file", "video"}:
             continue
+        if cq_type == "reply":
+            continue
         text += process_text(str(segment))
     return text, attachments
+
+
+def render_discord_text_for_qq(text):
+    """Build QQ text segments without parsing user-controlled CQ codes."""
+    message = Message()
+    position = 0
+    for match in re.finditer(r"<@!?(\d+)>", text):
+        if match.start() > position:
+            message += MessageSegment.text(text[position : match.start()])
+        qq_id = get_qq_bind(match.group(1))
+        if qq_id:
+            message += MessageSegment.at(qq_id)
+        else:
+            message += MessageSegment.text(match.group(0))
+        position = match.end()
+    if position < len(text):
+        message += MessageSegment.text(text[position:])
+    return message
 
 
 def get_cq_images(string):
@@ -143,11 +170,21 @@ def get_cq_images(string):
     return cq_images
 
 
+def _has_extension(extension_list, *values):
+    for value in values:
+        if not value:
+            continue
+        parsed = urlparse(str(value))
+        target = parsed.path if parsed.scheme else str(value).split("?", 1)[0]
+        if target.lower().endswith(extension_list):
+            return True
+    return False
+
+
 def is_video_file(filename="", url="", content_type=""):
     if content_type and content_type.split(";", 1)[0].lower().startswith("video/"):
         return True
-    target = (filename or url or "").split("?", 1)[0].lower()
-    return target.endswith(
+    return _has_extension(
         (
             ".mp4",
             ".mov",
@@ -159,15 +196,16 @@ def is_video_file(filename="", url="", content_type=""):
             ".wmv",
             ".mpeg",
             ".mpg",
-        )
+        ),
+        filename,
+        url,
     )
 
 
 def is_image_file(filename="", url="", content_type=""):
     if content_type and content_type.split(";", 1)[0].lower().startswith("image/"):
         return True
-    target = (filename or url or "").split("?", 1)[0].lower()
-    return target.endswith(
+    return _has_extension(
         (
             ".jpg",
             ".jpeg",
@@ -177,7 +215,9 @@ def is_image_file(filename="", url="", content_type=""):
             ".bmp",
             ".tif",
             ".tiff",
-        )
+        ),
+        filename,
+        url,
     )
 
 
@@ -194,9 +234,38 @@ def format_file_size(size):
         value /= 1024
 
 
+def get_qq_sender_name(sender, fallback):
+    if sender:
+        card = getattr(sender, "card", None)
+        nickname = getattr(sender, "nickname", None)
+        if isinstance(sender, dict):
+            card = sender.get("card")
+            nickname = sender.get("nickname")
+        return str(nickname or card or fallback)
+    return str(fallback)
+
+
+async def get_group_member_name(bot, group_id, user_id):
+    try:
+        member = await bot.call_api(
+            "get_group_member_info",
+            group_id=group_id,
+            user_id=user_id,
+            no_cache=False,
+        )
+    except FinishedException:
+        raise
+    except Exception:
+        logger.warning(
+            f"Failed to get QQ group member info: GroupID={group_id} UserID={user_id}"
+        )
+        return str(user_id)
+    return get_qq_sender_name(member, user_id)
+
+
 def replace_cq_at_with_ids(msg):
     pattern = r"\[CQ:at,qq=(\d+)\]"
-    ids = {qq: dis for dis, qq in json.load(open(qq_bind_file, "r")).items()}
+    ids = {qq: dis for dis, qq in _load_qq_bind().items()}
 
     def replace_id(match):
         id_str = match.group(1)
@@ -211,7 +280,7 @@ def replace_cq_at_with_ids(msg):
 
 def replace_ids_with_cq_at(msg):
     pattern = r"<@(\d+)>"
-    ids = json.load(open(qq_bind_file, "r"))
+    ids = _load_qq_bind()
 
     def replace_id(match):
         id_to_replace = match.group(1)
