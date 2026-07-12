@@ -39,6 +39,12 @@ class Config(BaseModel):
     # 消息已被删除占位符
     dmb_delete_placeholder: str = "[消息已被删除]"
     
+    # 撤回消息时是否同步删除另一端消息；关闭时使用删除占位符
+    dmb_delete_on_recall: bool = False
+
+    # QQ -> Discord 转发时是否优先显示 QQ 群名片
+    dmb_use_qq_group_card: bool = True
+
     # Bot 名称
     dmb_bot_name: str = "Discord Message Bridge"
     
@@ -81,6 +87,8 @@ IMAGE_PLACEHOLDER = config.dmb_image_placeholder
 VIDEO_PLACEHOLDER = config.dmb_video_placeholder
 EDIT_PLACEHOLDER = config.dmb_edit_placeholder
 DELETE_PLACEHOLDER = config.dmb_delete_placeholder
+DELETE_ON_RECALL = config.dmb_delete_on_recall
+USE_QQ_GROUP_CARD = config.dmb_use_qq_group_card
 BOT_NAME = config.dmb_bot_name
 QQ_COMMAND_NAME = config.dmb_qq_command
 QQ_COMMAND_PREFIX = config.dmb_qq_command_prefix

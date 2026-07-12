@@ -168,15 +168,20 @@ async def _(matcher: Matcher, bot: Bot, event: GroupRecallNoticeEvent):
     for fwd in uLocal.get_forwards(event.group_id, "qq-groups"):
         if dc_id := uLocal.get_another_message_id(event.message_id, "qq"):
             async with httpx.AsyncClient() as client:
-                await client.patch(
-                    url=uLocal.get_discord_channel(fwd["discord-channel"])["webhook-url"] + "/messages/" + dc_id,
-                    headers={"Content-Type": "application/json"},
-                    json={
-                        "content": "||"
-                        + (await uDownload.get_discord_message_content(dc_id, fwd, e=False))
-                        + "||"
-                    },
-                )
+                if DELETE_ON_RECALL:
+                    await client.delete(
+                        url=uLocal.get_discord_channel(fwd["discord-channel"])["webhook-url"] + "/messages/" + dc_id
+                    )
+                else:
+                    await client.patch(
+                        url=uLocal.get_discord_channel(fwd["discord-channel"])["webhook-url"] + "/messages/" + dc_id,
+                        headers={"Content-Type": "application/json"},
+                        json={
+                            "content": "||"
+                            + (await uDownload.get_discord_message_content(dc_id, fwd, e=False))
+                            + "||"
+                        },
+                    )
 
 
 async def forward_qq_group_file_to_discord(bot: Bot, event: GroupUploadNoticeEvent):

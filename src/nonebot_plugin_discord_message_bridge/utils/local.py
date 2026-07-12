@@ -241,6 +241,8 @@ def get_qq_sender_name(sender, fallback):
         if isinstance(sender, dict):
             card = sender.get("card")
             nickname = sender.get("nickname")
+        if USE_QQ_GROUP_CARD:
+            return str(card or nickname or fallback)
         return str(nickname or card or fallback)
     return str(fallback)
 

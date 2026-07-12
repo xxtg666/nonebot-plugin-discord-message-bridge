@@ -249,11 +249,14 @@ def startDiscordBot(bot_token, bot_id):
                     return
                 async with (message.channel.typing() if not fwd["silent"] else uLocal.NoneAsyncWith()):
                     if qq_id := uLocal.get_another_message_id(message.id, "dc"):
-                        ms = MessageSegment.reply(int(qq_id)) + DELETE_PLACEHOLDER
-                        msg_id = (
-                            await gv.qq_bot.send_group_msg(group_id=uLocal.get_qq_group_id(fwd['qq-group']), message=ms)
-                        )["message_id"]
-                        uLocal.record_message_id(msg_id, message.id)
+                        if DELETE_ON_RECALL:
+                            await gv.qq_bot.delete_msg(message_id=int(qq_id))
+                        else:
+                            ms = MessageSegment.reply(int(qq_id)) + DELETE_PLACEHOLDER
+                            msg_id = (
+                                await gv.qq_bot.send_group_msg(group_id=uLocal.get_qq_group_id(fwd['qq-group']), message=ms)
+                            )["message_id"]
+                            uLocal.record_message_id(msg_id, message.id)
                 await asyncio.sleep(QQ_SEND_INTERVAL)
 
         discord_tree = app_commands.CommandTree(discord_client)
